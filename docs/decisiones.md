@@ -30,10 +30,16 @@ Propuestas y recomendaciones en [`ruta-de-trabajo.md`](ruta-de-trabajo.md#decisi
 
 ## Preguntas para los mentores de Belo
 
-1. ¿Qué herramientas expone el MCP V1? ¿Cuáles son de solo lectura y cuáles mueven dinero?
-2. ¿Hay sandbox o saldo de prueba, o las operaciones son reales?
-3. ¿`ramp.fiat_crypto` acepta una referencia o clave de idempotencia?
-4. ¿`transaction.approve` permite aprobar un plan con varios movimientos de una vez?
-5. ¿`account.activity` permite detectar ingresos nuevos casi en tiempo real, o hay webhooks?
-6. ¿Cómo funcionan las comisiones o spreads entre monedas latinoamericanas y dólares digitales en la API?
-7. ¿Qué métrica les importaría más ver en una demo: retención de saldo, cantidad de operaciones o confianza declarada?
+Las cuatro primeras son urgentes: todavía no tenemos acceso al MCP.
+
+1. ¿Cuándo y cómo recibimos el acceso al MCP V1 (URL, credenciales, $belotag)?
+2. ¿El MCP usa transporte HTTP o stdio, y cómo se autentica?
+3. ¿Pueden compartir respuestas de ejemplo de cada tool, aunque sea en JSON, para ajustar nuestro MCP simulado?
+4. ¿Podemos llamar al MCP desde un servidor público (nuestra URL de la demo), o solo desde equipos locales?
+5. ¿Qué herramientas expone el MCP V1? ¿Cuáles son de solo lectura y cuáles mueven dinero?
+6. ¿Hay sandbox o saldo de prueba, o las operaciones son reales?
+7. ¿`ramp.fiat_crypto` acepta una referencia o clave de idempotencia?
+8. ¿`transaction.approve` permite aprobar un plan con varios movimientos de una vez?
+9. ¿`account.activity` permite detectar ingresos nuevos casi en tiempo real, o hay webhooks?
+10. ¿Cómo funcionan las comisiones o spreads entre monedas latinoamericanas y dólares digitales en la API?
+11. ¿Qué métrica les importaría más ver en una demo: retención de saldo, cantidad de operaciones o confianza declarada?

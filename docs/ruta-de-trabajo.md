@@ -21,6 +21,7 @@ Qué tecnologías usamos, quién hace qué, en qué rama y en qué orden, desde 
 | Dinero | **`Decimal`**, nunca `float` | Evita errores de redondeo en montos y cotizaciones |
 | Orquestación del agente | **Propuesta: máquina de estados en Python puro** | Ver "Decisiones a votar" |
 | Cliente MCP | **SDK oficial `mcp` para Python** | Para `LiveBeloMCPAdapter`; el transporte (HTTP o stdio) se confirma con el kit |
+| MCP simulado | **Servidor MCP propio con FastMCP** (del mismo SDK `mcp`), en `backend/mcp_simulado/` | Mientras no haya acceso al MCP de Belo, expone las mismas 8 tools con sus nombres y responde con los datos del mock. Ver "Sin acceso al MCP de Belo" |
 | Tests | **pytest** | Los 12 casos de seguridad corren contra el mock |
 | Calidad | **ruff** (lint y formato) | Un solo comando, sin discusiones de estilo |
 
@@ -65,6 +66,23 @@ El LLM se usa en cuatro lugares, todos de solo lectura: nombrar los patrones que
 | Seguridad del servidor | Usuario `deploy` sin privilegios de root (solo Docker), una llave SSH exclusiva para GitHub Actions y firewall abierto solo en 22, 80 y 443. Límite de memoria y `restart: unless-stopped` en Compose | El droplet es nuestro: la llave del workflow solo sirve para desplegar |
 | Respaldo | La demo también corre en local con un comando, y hay un video grabado el sábado | Si el servidor falla durante el pitch |
 
+### Sin acceso al MCP de Belo
+
+Todavía no tenemos acceso al MCP de Belo. No es un bloqueo: todo acceso a Belo pasa por `BeloPort`, así que el dominio, el agente, la API y el frontend no saben qué hay del otro lado. Trabajamos en tres capas:
+
+| Capa | Qué es | Para qué sirve | Cómo se elige |
+|---|---|---|---|
+| 1 · `MockBeloAdapter` | Mock en el mismo proceso, con los datos de Sofía, cotización configurable y modos de fallo | Construir toda la demo, correr los 12 tests y servir la URL pública | `BELO_ADAPTER=mock` (por defecto) |
+| 2 · MCP simulado | Servidor MCP propio (FastMCP) con las 8 tools de la V1, mismos nombres y las respuestas del mock | Escribir y probar `LiveBeloMCPAdapter` desde hoy, hablando el protocolo MCP de verdad, y mostrar al jurado el flujo MCP completo con el sello SIMULATED | `BELO_ADAPTER=live` con `BELO_MCP_URL` apuntando al MCP simulado |
+| 3 · MCP de Belo | El MCP V1 real | Las tools de lectura en vivo, cuando llegue el acceso | `BELO_ADAPTER=live` con `BELO_MCP_URL` de Belo |
+
+Reglas para que el cambio a Belo sea de horas y no de días:
+
+- Los nombres de las tools salen de la página pública de Belo (belo.app/agentic). Los parámetros y los nombres de campos se traducen en un solo archivo del adaptador.
+- Nadie llama a Belo, ni al MCP simulado, fuera de `BeloPort`.
+- El MCP simulado nunca se presenta como Belo: sus respuestas llevan `live=False` y el sello SIMULATED.
+- No esperamos el acceso para empezar nada.
+
 ### Preparar el droplet (Cesar, idealmente antes del kickoff)
 
 1. Confirmar sistema operativo y memoria (1 GB alcanza, porque el droplet no compila) y si ya corre otros servicios en los puertos 80 o 443. Si ya hay un proxy (Nginx, Caddy, Traefik), se agrega un bloque para la app en lugar de instalar Caddy.
@@ -91,7 +109,7 @@ Cada persona es dueña de carpetas distintas y trabaja con los prefijos de rama 
 
 | Integrante | Rol | Es dueño de | Prefijos de rama |
 |---|---|---|---|
-| **Cesar** | AI/ML y orquestación | `ports/`, `adapters/`, `agent/` | `adapter/…`, `agent/…` |
+| **Cesar** | AI/ML y orquestación | `ports/`, `adapters/`, `agent/`, `mcp_simulado/` | `adapter/…`, `agent/…` |
 | **Juan Carlos** | Backend y despliegue | `domain/modelos.py`, `motor.py`, `juez.py`, `estados.py`, `autonomia.py`, `db/`, `api/`, `Dockerfile`, `deploy/`, `.github/workflows/` | `domain/…`, `api/…` |
 | **Vanessa** | Validaciones y datos | `domain/fx.py`, `domain/perfilador.py`, `tests/`, `data/` | `domain/…` |
 | **Brigitte** | Frontend | `frontend/` | `front/…` |
@@ -109,10 +127,11 @@ Una rama por tarea, creada desde `main` actualizado justo antes de empezarla, co
 |---|---|---|---|---|
 | `adapter/belo-port` | Contrato `BeloPort` (las 7 tools de la V1 más `move_to_pocket`) | 1 | — | Juan Carlos |
 | `adapter/mock-belo` | `MockBeloAdapter` con los datos de Sofía, cotización configurable y modos de fallo (timeout, FX fuera de banda) | 1 | Base de T05 y T09 | Vanessa |
+| `adapter/mcp-simulado` | Servidor MCP propio con las 8 tools de la V1 (mismos nombres, respuestas del mock) y una primera versión de `LiveBeloMCPAdapter` que se conecta a él | 1 | Prueba de humo: cada tool responde por MCP | Juan Carlos |
 | `agent/llm-cliente` | `agent/llm.py`: cliente de Claude, structured outputs, respaldo ante rechazos y textos de plantilla | 2 | — | Juan Carlos |
 | `agent/orquestador-plan` | `load_context → fetch_belo → rules_engine → compose_plan` | 2 | T08 | Juan Carlos |
 | `agent/aprobacion-ejecucion` | `human_approval → execute_and_audit` con `transaction.approve` y MCP Log | 3 | T03, T06 (de punta a punta) | Juan Carlos |
-| `adapter/live-belo-lectura` | `LiveBeloMCPAdapter` para `auth.sign_in`, `account.*` y `exchange.fx` | 3 | Prueba manual contra el kit | Vanessa |
+| `adapter/live-belo-lectura` | Apuntar `LiveBeloMCPAdapter` al MCP real de Belo: URL, autenticación y nombres de campos de `auth.sign_in`, `account.*` y `exchange.fx` | 3, o apenas llegue el acceso | Prueba manual contra el kit | Vanessa |
 | `front/cliente-api` | Tipos generados del OpenAPI y conexión de las pantallas a la API real | 3 | — | Brigitte |
 | `agent/perfilado` | `profile_patterns`: el LLM nombra los patrones y redacta las reglas propuestas | 4 | T12 (con Vanessa) | Vanessa |
 
@@ -158,7 +177,7 @@ Una rama por tarea, creada desde `main` actualizado justo antes de empezarla, co
 
 | Rama | Qué entrega | Bloque | Revisa |
 |---|---|---|---|
-| `docs/respuestas-mentores` | Respuestas de Belo a las 7 preguntas, en `decisiones.md` | 0 | Cesar |
+| `docs/respuestas-mentores` | Respuestas de Belo a las preguntas de `decisiones.md` (ahora 11), anotadas en el mismo archivo | 0 | Cesar |
 | `docs/guion-demo` | Texto de cada pantalla de la demo, cronometrado a 50 segundos | 3 | Brigitte |
 | `docs/readme-entrega` | README final: enlace público, cómo probarlo, capturas, cifra real de tests y qué es SIMULATED | 5 | Cesar |
 
@@ -187,14 +206,14 @@ Horas en hora de Colombia. Cada bloque cierra con un **checkpoint** de 10 minuto
 ### Bloque 0 · Viernes 17:00–18:30 · Kickoff y arranque
 
 - **Todos:** escuchar el kickoff, leer el kit del MCP y las bases de entrega, y votar las 4 decisiones de la sección 1.
-- **Julia:** hacer las 7 preguntas a los mentores; agregar una octava: si se puede usar el MCP en vivo desde un servidor público.
+- **Julia:** hacer las 11 preguntas a los mentores de [`decisiones.md`](decisiones.md). Las primeras son las del acceso al MCP: cuándo llega, si hay sandbox, qué transporte usa y si pueden compartir respuestas de ejemplo.
 - **Cesar:** probar `auth.sign_in` y `account.balances` con el kit. Si no quedó listo antes del kickoff, preparar el droplet (ver "Preparar el droplet").
 - **Juan Carlos:** `api/esqueleto`. **Brigitte:** `front/esqueleto`. **Vanessa:** `domain/datos-kit`.
 
 ### Bloque 1 · Viernes 18:30–23:30 · Contratos, esqueleto y URL pública
 
 - **Juan Carlos:** `domain/modelos` y `api/contrato-ejemplos` (C1 y C3), y `api/deploy-digitalocean`: la URL pública muestra el frontend y responde `/api/salud`.
-- **Cesar:** `adapter/belo-port` y `adapter/mock-belo` (C2).
+- **Cesar:** `adapter/belo-port` y `adapter/mock-belo` (C2), y después `adapter/mcp-simulado`.
 - **Vanessa:** `domain/tests-seguridad`.
 - **Brigitte:** `front/pantalla-reglas` y `front/pantalla-plan` con los JSON de ejemplo.
 - **Julia:** primera publicación de Construye en Público.
@@ -245,11 +264,12 @@ Horas en hora de Colombia. Cada bloque cierra con un **checkpoint** de 10 minuto
 
 En este orden, de lo primero que se sacrifica a lo último:
 
-1. `LiveBeloMCPAdapter` para escribir: todo lo que mueve dinero queda en el mock con SIMULATED (en la URL pública es así de todos modos).
-2. `LiveBeloMCPAdapter` para leer: la URL pública corre entera contra el mock.
-3. Perfilado en la interfaz: se muestra como un paso ya confirmado y el test T12 lo respalda.
-4. Autonomía en vivo: queda solo la tarjeta del cierre.
-5. **Nunca se recortan:** la URL pública, el plan del ingreso, el Caso Rojo, la aprobación idempotente y el MCP Log. Son lo que se entrega.
+1. `adapter/mcp-simulado`: el mock en proceso alcanza para la demo; solo se pierde mostrar el protocolo MCP de punta a punta.
+2. `LiveBeloMCPAdapter` para escribir: todo lo que mueve dinero queda en el mock con SIMULATED (en la URL pública es así de todos modos).
+3. `LiveBeloMCPAdapter` para leer: la URL pública corre entera contra el mock.
+4. Perfilado en la interfaz: se muestra como un paso ya confirmado y el test T12 lo respalda.
+5. Autonomía en vivo: queda solo la tarjeta del cierre.
+6. **Nunca se recortan:** la URL pública, el plan del ingreso, el Caso Rojo, la aprobación idempotente y el MCP Log. Son lo que se entrega.
 
 ## 6. Riesgos y qué hacemos
 
@@ -258,7 +278,7 @@ En este orden, de lo primero que se sacrifica a lo último:
 | El despliegue falla a última hora | La URL existe desde el viernes y cada merge se despliega. Cada imagen queda etiquetada con su commit: volver atrás es cambiar la etiqueta y correr `docker compose up -d` |
 | El droplet se cae o se queda sin memoria | Reinicio automático y límite de memoria en Compose; demo local y video de respaldo. Cesar tiene acceso a la consola de DigitalOcean |
 | Dos jurados prueban al mismo tiempo | Botón Reiniciar demo y estado inicial sembrado en cada arranque |
-| El kit del MCP llega tarde o no funciona | Todo corre contra el mock desde el inicio; el adaptador live se conecta cuando funcione |
+| El acceso al MCP de Belo llega tarde o no llega | Todo corre contra el mock desde el inicio y el cliente MCP ya está probado contra nuestro MCP simulado. Si el acceso nunca llega, lo que no corre en vivo lleva el sello SIMULATED (D10) |
 | El LLM falla o tarda | Textos de plantilla por cada uso del LLM y video de respaldo |
 | Dos personas tocan el mismo archivo | Dueños por carpeta, una rama por tarea y PR cortos |
 | Se rompe `main` el sábado por la noche | Congelamiento a las 22:00; Cesar revisa cada merge |
