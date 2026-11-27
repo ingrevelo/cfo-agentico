@@ -14,7 +14,7 @@ app/
 ├── agent/      Grafo del agente (LangGraph o máquina de estados en Python) y prompts del LLM.
 ├── api/        Endpoints FastAPI que consume el frontend.
 └── db/         Esquema SQLite: reglas, planes, movimientos, claves de idempotencia y MCP Log.
-tests/          Los 11 casos de seguridad (T01–T11) contra MockBeloAdapter.
+tests/          Los 12 casos de seguridad (T01–T12) contra MockBeloAdapter.
 ```
 
 **Regla de dependencias:** `domain` no importa nada de `adapters`, `api` ni `agent`. Todo acceso a Belo pasa por `ports/BeloPort`.

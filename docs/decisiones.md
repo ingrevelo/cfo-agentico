@@ -16,6 +16,8 @@ Registro corto de lo que decidimos, lo que falta decidir y lo que hay que pregun
 | D8 | **Autonomía ganada por categoría**, empezando por lo que no sale de dólares | Responde al dolor de confianza de Belo y es el diferenciador del proyecto |
 | D9 | **SQLite**, sin bases de grafos | Una usuaria y pocas reglas no justifican más infraestructura en 48 horas |
 | D10 | **Badge SIMULATED** para todo lo que no corra en vivo | Nunca fingir una operación real |
+| D11 | **Perfilado en modo sombra:** el código detecta patrones, el LLM los interpreta y la persona confirma | Le da al agente un rol que no se resuelve con un `if` y convierte el onboarding en confirmar en lugar de escribir reglas |
+| D12 | **Monedas genéricas:** cada obligación se convierte a la moneda en que vence | El producto sirve para ARS, BRL, COP, CLP o MXN; la demo usa USD→ARS |
 
 ## Pendientes
 

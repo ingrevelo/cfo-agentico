@@ -4,6 +4,7 @@ Lógica de negocio pura, sin llamadas a red ni a base de datos. Es lo primero qu
 
 | Módulo previsto | Responsabilidad | Referencia en el caso de prueba |
 |---|---|---|
+| `perfilador.py` | Detecta recurrencias en el historial (destino, periodicidad, monto) y las devuelve como patrones con sus números | Fase 1.1 y anexo A4b |
 | `reglas.py` | Modelo de las reglas duras y blandas (colchón, tope, FX, impuestos, niveles) | "Reglas duras" |
 | `motor.py` | Calcula los movimientos de un plan a partir del ingreso, los vencimientos y la cotización | Fase 2.1 |
 | `juez.py` | Decide EJECUTAR, PEDIR_APROBACION, OK_ADICIONAL, SOMBRA, SUGERIR o BLOQUEAR; revisa el FX al ejecutar y detecta oportunidades | Anexo A4 |

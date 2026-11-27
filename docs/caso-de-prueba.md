@@ -7,6 +7,7 @@ Recorre la propuesta completa con la persona del equipo (blueprint de Notion de 
 > **Todo es simulado.** Persona, montos y tasas son inventados.
 > **Las tools son las reales del MCP V1 de Belo** (fuente: belo.app/agentic): `auth.sign_in`, `account.balances`, `account.yields`, `account.activity`, `exchange.fx`, `ramp.fiat_crypto`, `transaction.approve` y `card.manage`. Sus parámetros y respuestas son supuestos hasta que llegue el kit del kickoff.
 > Tasa del caso: **1 USD = 1.185 ARS**.
+> **El caso usa USD→ARS, pero el flujo es genérico:** cada obligación se convierte a la moneda en que vence (ARS, BRL, COP, CLP o MXN, las monedas de Belo), y el excedente se protege en dólares digitales.
 
 ---
 
@@ -19,13 +20,14 @@ Recorre la propuesta completa con la persona del equipo (blueprint de Notion de 
  ┌───────────────┐  pide plan   ┌──────────────────────────┐  BeloPort   ┌──────────────────┐
  │ Agente (LLM)  │ ───────────▶ │ CAPA DE POLÍTICAS        │ ──────────▶ │ MCP de Belo V1   │
  │ interpreta    │              │ (código determinista)    │             │ Mock o Live      │
- │ reglas,       │ ◀─────────── │ motor de reglas · juez   │ ◀────────── │ balances · fx ·  │
+ │ reglas,       │ ◀─────────── │ perfilador · motor · juez│ ◀────────── │ balances · fx ·  │
  │ redacta y     │   números y  │ máquina de estados       │  resultado  │ yields · activity│
  │ explica       │   decisión   │ idempotencia · MCP Log   │             │ ramp · approve   │
  └───────────────┘              └──────────────────────────┘             └──────────────────┘
 ```
 
-- **El LLM no calcula montos ni tiene tools de escritura.** El motor de reglas arma los números y el LLM solo redacta la tarjeta y el "por qué" (nodo `compose_plan`).
+- **El LLM no calcula montos ni tiene tools de escritura.** El motor de reglas arma los números y el LLM redacta la tarjeta y el "por qué" (nodo `compose_plan`). También interpreta las reglas que la persona dice en lenguaje natural y le pone nombre a los patrones que encuentra el perfilador.
+- **El perfilador (código) aprende de los movimientos:** busca en `account.activity` lo que se repite (obligaciones, ingresos, retiros) y el agente lo propone como regla. Nada se aplica sin la confirmación de la persona.
 - **Toda lectura o escritura a Belo pasa por `BeloPort`**, que tiene dos adaptadores: `MockBeloAdapter` (desde ya) y `LiveBeloMCPAdapter` (cuando llegue el kit).
 - **El OK de Sofía usa `transaction.approve`**, la aprobación nativa de Belo.
 - **Lo que no está en la V1** (alcancías, pago de alquiler o monotributo) se ejecuta contra el mock con el **badge SIMULATED**.
@@ -92,8 +94,8 @@ PROPUESTO ──▶ APROBADO ──▶ EJECUTANDO ──▶ COMPLETADO
 **Vencimientos:**
 | Vencimiento | Monto | Cuándo |
 |---|---|---|
-| Alquiler | 450.000 ARS | jueves de esta semana |
-| Monotributo | 65.000 ARS | día 20 |
+| Alquiler | 450.000 ARS | jueves 3 de diciembre (detectado por el perfilador, fase 1) |
+| Monotributo | 65.000 ARS | día 20 (detectado por el perfilador, fase 1) |
 
 ### Reglas duras, definidas para que las cuentas cierren
 | Regla | Valor | Definición exacta | Si se viola |
@@ -161,17 +163,43 @@ PROPUESTO ──▶ APROBADO ──▶ EJECUTANDO ──▶ COMPLETADO
 
 ---
 
-## Fase 1 · Modo sombra, antes de delegar (semanas 46 y 47)
+## Fase 1 · Modo sombra: perfilar, proponer reglas y mostrar qué habría hecho
 
-Todas las categorías están en nivel 1. El agente lee `account.balances`, `account.activity` y `exchange.fx`, pero **no escribe nada**.
+Durante las primeras semanas todas las categorías están en nivel 1. El agente lee `account.balances`, `account.activity` y `exchange.fx`, pero **no escribe nada**. Hace dos cosas: aprende de los movimientos de Sofía y le muestra qué habría hecho.
 
-**Lo que muestra el agente:**
-> "La semana pasada sacaste USD 1.400 al banco el martes. Con tus reglas habría convertido solo los USD 380 del alquiler y dejado USD 900 rindiendo en USDT (rendimiento variable, no garantizado). Tus dólares no habrían bajado de USD 1.120."
+### 1.1 Perfilado: el código detecta, el LLM interpreta y Sofía confirma
+Entrada: el historial sintético de seis meses (`data/historial-sofia.json`, 43 movimientos de junio a noviembre de 2026).
 
-> "Una vez esperar no te convenía: el lunes el dólar estaba a 1.195 y el jueves a 1.185. Si hubiera convertido el lunes habrías recibido 3.800 ARS más. Te lo cuento igual."
+1. **El perfilador (código) busca recurrencias:** mismo destino u origen, al menos 3 repeticiones, periodicidad mensual con ±3 días y monto con menos de 5% de variación.
+2. **El LLM interpreta** las descripciones desordenadas ("Transf. Inmob. Palermo alq nov", "VEP ARCA monot.", "ALQUILER DEPTO 3B") y le pone nombre y categoría a cada patrón. No calcula montos ni fechas: esos salen del código.
+3. **El agente propone** convertir cada patrón en una regla. Nada se aplica hasta que Sofía confirma.
+
+| Patrón | Lo que detecta el código | Lo que interpreta el LLM | Propuesta |
+|---|---|---|---|
+| P1 | 450.000 ARS a Inmobiliaria Palermo SRL, entre el día 1 y el 5, 6 meses seguidos | Alquiler (vivienda) | Agregar vencimiento: alquiler, 450.000 ARS, primeros días del mes |
+| P2 | 65.000 ARS a ARCA, entre el día 18 y el 20, 6 meses | Monotributo (impuestos) | Agregar vencimiento: monotributo, día 20 |
+| P3 | Cerca de USD 1.500 de Northwind Studio LLC, entre el día 1 y el 3 | Ingreso principal | Esperar ese ingreso y armar el plan cuando llegue |
+| P4 | Dos días después de cada ingreso, USD 1.400 vendidos y retirados al banco | "Pasamanos" | Mostrar qué habría pasado con un plan (1.2) |
+
+Los gastos de tarjeta (supermercado, café, transporte) no forman un patrón con esas condiciones y no generan propuestas.
+
+> **Encontré 3 cosas que se repiten en tu cuenta**
+> 1. Todos los meses, entre el 1 y el 5, pagas **450.000 ARS a Inmobiliaria Palermo**. ¿Es tu alquiler? ¿Lo agrego como vencimiento?
+> 2. Entre el 18 y el 20 pagas **65.000 ARS a ARCA**: parece tu monotributo. ¿Lo agrego?
+> 3. Tu pago principal, **unos USD 1.500**, llega entre el 1 y el 3 de cada mes. Cuando entre, te armo el plan.
+> [Confirmar todo] [Revisar uno por uno]
+
+Sofía confirma. Los vencimientos entran a sus reglas con `"origen": "perfilado"` y la fecha de confirmación. Si rechazara uno, se descarta y no se aplica.
+
+### 1.2 Lo que habría hecho (contrafactual)
+> "La semana pasada sacaste USD 1.400 al banco el martes. Con tus reglas habría cambiado solo los USD 380 del alquiler y dejado USD 900 rindiendo en USDT (rendimiento variable, no garantizado). Tus dólares no habrían bajado de USD 1.120."
+
+> "Una vez esperar no te convenía: el lunes el dólar estaba a 1.195 y el jueves a 1.185. Si hubiera cambiado el lunes habrías recibido 3.800 ARS más. Te lo cuento igual."
 
 **Resultado esperado:**
 - [ ] Cero llamadas de escritura (`ramp.fiat_crypto`, `transaction.approve`).
+- [ ] Cada patrón detectado se propone como regla y **no se aplica sin la confirmación** de Sofía.
+- [ ] Los montos y fechas de cada patrón salen del código; el LLM solo los nombra y los explica.
 - [ ] Las decisiones se registran como `SOMBRA`, con su resultado a favor o en contra.
 - [ ] Al terminar, Sofía activa el nivel 3 en `rendimiento_usdt`, `apartar_impuestos` y `convertir_para_vencimientos`, como en el mandato de la fase 0.
 
@@ -310,7 +338,7 @@ Sofía saca los USD 120 de la alcancía y marca "no quería apartarlo esta seman
 
 ---
 
-## Los 11 casos de seguridad
+## Los 12 casos de seguridad
 | ID | Qué se verifica | Fase | Esperado |
 |---|---|---|---|
 | T01 | Las reglas en lenguaje natural se convierten en reglas duras confirmadas y guardadas en la DB | 0 | Reglas en código, no en el prompt |
@@ -324,6 +352,7 @@ Sofía saca los USD 120 de la alcancía y marca "no quería apartarlo esta seman
 | T09 | Si el FX empeora más de 2%, la conversión se retiene; si no, se ejecuta | 4 | RETENIDO / COMPLETADO |
 | T10 | La autonomía sube con evidencia y baja con un reverso; cambiar a pesos sigue pidiendo OK | 5 | Nivel 3 → 4 → 3 |
 | T11 | Si el FX mejora 2% o más antes del vencimiento, propone adelantar con menos USD; nunca cambia más de lo que vence | 4.3 | Propuesta con USD ≤ aprobado |
+| T12 | Un patrón detectado por el perfilador se propone como regla y no se aplica sin confirmación | 1.1 | Propuesta pendiente; reglas sin cambios hasta el OK |
 
 **Transversal:** cada paso deja una línea en el MCP Log con tool, ID, estado y si es live o SIMULATED.
 
@@ -367,6 +396,7 @@ Cada `TxResult` incluye `live: bool`. Si es `False`, la pantalla muestra el badg
 | `compose_plan` | Redacta la tarjeta y el "por qué" a partir de la salida del motor | Sí |
 | `human_approval` | `interrupt()` → `transaction.approve` | No |
 | `execute_and_audit` | Ejecuta lo aprobado, aplica transiciones de estado e idempotencia y escribe el MCP Log | No |
+| `profile_patterns` (tarea aparte, en modo sombra) | Detecta recurrencias en `account.activity` (código) y pide al LLM que las nombre y redacte la propuesta | Solo para nombrar y redactar |
 
 > **Una sola fuente de verdad:** las transiciones de estado las valida el backend (tabla de movimientos con `ledger.transicion`). El grafo orquesta pero no guarda estados propios de dinero.
 
@@ -440,6 +470,26 @@ def oportunidad_favorable(mov, cotizacion_actual, reglas, ahora):
                      monto_usd=usd, cotizacion=cotizacion_actual)   # pasa por evaluar() y pide OK (nivel 3)
 ```
 
+## A4b. Perfilador (detección en código, interpretación con LLM)
+```python
+def detectar_recurrentes(movs, min_rep=3, tolerancia_dias=3, var_max=0.05):
+    grupos = agrupar_por(movs, clave=lambda m: (m.contraparte, m.moneda, m.tipo))
+    patrones = []
+    for (contraparte, moneda, tipo), ms in grupos.items():
+        if len(ms) < min_rep:
+            continue
+        dias = [m.fecha.day for m in ms]
+        montos = [m.monto for m in ms]
+        if max(dias) - min(dias) <= 2 * tolerancia_dias and coef_variacion(montos) <= var_max:
+            patrones.append(Patron(contraparte, moneda, tipo, mediana(montos), min(dias), max(dias),
+                                   descripciones=[m.descripcion for m in ms]))
+    return patrones
+
+def proponer_reglas(patrones, llm):
+    # El LLM solo recibe las descripciones y devuelve nombre y categoría; los números vienen del patrón
+    return [Propuesta(patron=p, **llm.nombrar(p.descripciones), estado="PENDIENTE_CONFIRMACION") for p in patrones]
+```
+
 ## A5. Ejecutor y reconciliación
 ```python
 def ejecutar(mov):
@@ -481,6 +531,14 @@ def test_T09_fx_fuera_de_banda(app):
     app.mock.fijar_fx("USD", "ARS", 1150)
     app.correr_jueves()
     assert app.estado("plan-ing01-M3") == "RETENIDO"
+
+def test_T12_patron_no_se_aplica_sin_confirmar(app):
+    propuestas = app.perfilar(historial="data/historial-sofia.json")
+    alquiler = next(p for p in propuestas if p.patron.contraparte == "Inmobiliaria Palermo SRL")
+    assert alquiler.patron.monto == 450000 and alquiler.estado == "PENDIENTE_CONFIRMACION"
+    assert "rent" not in [v.id for v in app.reglas().dues if v.origen == "perfilado"]
+    app.confirmar(alquiler)
+    assert any(v.origen == "perfilado" and v.amount == 450000 for v in app.reglas().dues)
 
 def test_T11_adelanto_favorable(app):
     app.aprobar("plan-ing01")

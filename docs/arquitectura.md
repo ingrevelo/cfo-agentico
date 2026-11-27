@@ -9,7 +9,8 @@ CFO Agéntico separa tres responsabilidades: **la IA propone, el código frena y
 | Pieza | Responsabilidad | ¿Usa LLM? |
 |---|---|---|
 | **Frontend** (4 pantallas) | Reglas, plan, aprobación, resumen y MCP Log | No |
-| **Agente** | Interpreta reglas en lenguaje natural, redacta el plan y explica cada paso | Sí |
+| **Perfilador** | Detecta lo que se repite en el historial de `account.activity`: obligaciones, ingresos y retiros | No |
+| **Agente** | Nombra los patrones del perfilador, interpreta reglas en lenguaje natural, redacta el plan y explica cada paso | Sí |
 | **Reglas de la persona** | Colchón, tope, tolerancia de FX, impuestos y niveles de autonomía, guardados en la base de datos | No |
 | **Motor de reglas y juez** | Calcula los montos del plan y decide ejecutar, pedir aprobación o bloquear | No |
 | **Máquina de estados** | Estados de cada movimiento con idempotencia por `plan_id` + paso | No |
@@ -81,7 +82,17 @@ Además:
 
 Los ingresos menores a USD 100 no disparan un plan: se acumulan para el siguiente, para no llenar a la persona de aprobaciones.
 
-## 6. Grafo del agente
+## 6. Perfilado en modo sombra
+
+Antes de mover dinero, el agente aprende de los movimientos de la persona. Cada pieza hace lo que sabe hacer bien:
+
+1. **El código detecta:** agrupa por destino u origen y busca al menos 3 repeticiones con periodicidad mensual (±3 días) y monto estable (menos de 5% de variación). Montos y fechas salen de aquí.
+2. **El LLM interpreta:** lee descripciones desordenadas ("Transf. Inmob. Palermo alq nov") y le pone nombre y categoría al patrón.
+3. **La persona confirma:** cada patrón llega como una regla propuesta. Si no se confirma, no se aplica.
+
+El perfilado descubre **qué** hacer; la escalera de autonomía decide **cuánta libertad** tiene el agente para hacerlo. No predice el tipo de cambio ni recomienda inversiones.
+
+## 7. Grafo del agente
 
 | Nodo | Qué hace | ¿Usa LLM? |
 |---|---|---|
@@ -91,5 +102,6 @@ Los ingresos menores a USD 100 no disparan un plan: se acumulan para el siguient
 | `compose_plan` | Redacta la tarjeta y el "por qué" | Sí |
 | `human_approval` | `interrupt()` → `transaction.approve` | No |
 | `execute_and_audit` | Ejecuta, aplica estados e idempotencia, escribe el MCP Log | No |
+| `profile_patterns` (tarea aparte) | Corre el perfilador y pide al LLM que nombre los patrones | Solo para nombrar |
 
 El grafo orquesta, pero las transiciones de estado las valida el dominio. Así hay una sola fuente de verdad sobre el dinero.

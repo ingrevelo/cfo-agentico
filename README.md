@@ -1,6 +1,8 @@
 # CFO Agéntico
 
-**El CFO que se gana tu confianza.** Un agente dentro de Belo que organiza el dinero de freelancers y pymes cada vez que les entra un pago: cambia a pesos solo lo que vence, deja el resto en dólares rindiendo y aparta los impuestos. La persona aprueba, el código pone los límites y, con el tiempo, el agente se gana el permiso para hacer solo lo rutinario.
+**El CFO que se gana tu confianza.**
+
+Cada vez que a un freelancer le llega un pago, aparece la misma pregunta: ¿cuánto cambio, a qué moneda, cuándo y qué aparto? **CFO Agéntico** es un mini CFO dentro de Belo que aprende a responderla. Durante sus primeras semanas observa en modo sombra: perfila los movimientos de la persona, descubre sus obligaciones recurrentes y el ritmo de sus ingresos, y le propone reglas para que las confirme. Desde entonces, cada vez que entra dinero, un motor de reglas arma el plan: convierte solo lo que vence a la moneda en que vence, protege el excedente en dólares digitales con rendimiento y aparta los impuestos. El agente explica cada decisión en lenguaje simple; nada se mueve sin el OK de la persona, y cada operación queda registrada y protegida contra errores y duplicados. Con el tiempo, se gana el permiso para encargarse solo de lo rutinario.
 
 > Proyecto de **Dev IngenierIA** para el **Reto 1 · Banca agéntica (Belo)** del Hackathon 30X, del 27 al 29 de noviembre de 2026.
 >
@@ -18,10 +20,11 @@ Belo nombró dos dolores que queremos resolver:
 
 ## Cómo lo resolvemos
 
-Cuando entra un pago, CFO Agéntico arma un plan, lo explica en lenguaje simple y lo ejecuta solo con la aprobación de la persona.
+Primero aprende de los movimientos de la persona y le propone reglas. Después, cuando entra un pago, arma un plan, lo explica en lenguaje simple y lo ejecuta solo con su aprobación.
 
 | Principio | Qué significa |
 |---|---|
+| **Aprende de tus movimientos** | En modo sombra, un perfilador (código) detecta lo que se repite en el historial: obligaciones, ingresos, retiros. El LLM lo interpreta ("esto es tu alquiler") y lo propone como regla. Nada se aplica sin confirmación. |
 | **La IA propone y explica** | El LLM interpreta reglas dichas en lenguaje natural, redacta el plan y explica qué, por qué y con cuánto dinero. No calcula montos ni mueve fondos. |
 | **El código frena** | Colchón, topes, tolerancia de FX e idempotencia viven en código. Si alguien intenta una excepción, el motor la bloquea aunque el modelo "quiera" autorizarla. |
 | **La persona aprueba** | Ningún movimiento sale sin un OK explícito, con la aprobación nativa de Belo (`transaction.approve`). |
@@ -30,7 +33,7 @@ Cuando entra un pago, CFO Agéntico arma un plan, lo explica en lenguaje simple 
 
 ### Ejemplo: Sofía (datos sintéticos)
 
-Sofía es diseñadora freelance en Buenos Aires. Cobra USD 1.500 de un cliente en EE. UU. y el jueves paga 450.000 ARS de alquiler. Sus reglas: nunca bajar de USD 500 en dólares, no cambiar más de USD 400 a pesos sin preguntar y frenar si el dólar se mueve más de 2%.
+Sofía es diseñadora freelance en Buenos Aires. Cobra USD 1.500 de un cliente en EE. UU. y el jueves paga 450.000 ARS de alquiler. Ese vencimiento no lo cargó a mano: el agente lo encontró en su historial ("todos los meses pagas 450.000 ARS a Inmobiliaria Palermo, ¿es tu alquiler?") y ella lo confirmó. Sus reglas: nunca bajar de USD 500 en dólares, no cambiar más de USD 400 a pesos sin preguntar y frenar si el dólar se mueve más de 2%.
 
 Cuando entra el pago, el plan es:
 
@@ -42,6 +45,8 @@ Cuando entra el pago, el plan es:
 | Libre | USD 100 | Para el día a día |
 
 En dólares quedan **USD 1.120**, así que el colchón está cubierto. Si el jueves el dólar empeoró más de 2%, la conversión se retiene y vuelve a preguntar. Si antes del jueves mejora 2% o más, el agente propone adelantarla gastando menos dólares.
+
+El ejemplo usa dólares y pesos argentinos, pero el flujo es genérico: cada obligación se convierte a la moneda en que vence (ARS, BRL, COP, CLP o MXN).
 
 ## La demo en 50 segundos
 
@@ -95,20 +100,21 @@ cfo-agentico/
 ├── .env.example             Variables de entorno (sin secretos)
 ├── docs/
 │   ├── arquitectura.md      Piezas, estados, autonomía, juez y disparadores
-│   ├── caso-de-prueba.md    Especificación de punta a punta con Sofía y los 11 casos de seguridad
+│   ├── caso-de-prueba.md    Especificación de punta a punta con Sofía y los 12 casos de seguridad
 │   ├── decisiones.md        Decisiones tomadas, pendientes y preguntas para Belo
 │   └── diagramas/           Imágenes de la arquitectura, los estados y la autonomía
 ├── data/
-│   └── sofia-demo.json      Datos sintéticos de la demo
+│   ├── sofia-demo.json      Reglas y saldos sintéticos de la demo
+│   └── historial-sofia.json 6 meses de movimientos sintéticos para el perfilado
 ├── backend/                 Python + FastAPI (arquitectura hexagonal)
 │   ├── app/
-│   │   ├── domain/          Motor de reglas, juez, estados y autonomía (sin I/O)
+│   │   ├── domain/          Perfilador, motor de reglas, juez, estados y autonomía (sin I/O)
 │   │   ├── ports/           BeloPort
 │   │   ├── adapters/        MockBeloAdapter y LiveBeloMCPAdapter
 │   │   ├── agent/           Grafo del agente y prompts
 │   │   ├── api/             Endpoints para el frontend
 │   │   └── db/              Esquema SQLite
-│   └── tests/               Casos de seguridad T01–T11
+│   └── tests/               Casos de seguridad T01–T12
 └── frontend/                React + TypeScript (las 4 pantallas)
 ```
 
@@ -124,7 +130,7 @@ cp .env.example .env
 # Backend
 cd backend
 uv sync
-uv run pytest                              # los 11 casos de seguridad
+uv run pytest                              # los 12 casos de seguridad
 uv run uvicorn app.api.main:app --reload
 
 # Frontend
@@ -137,13 +143,13 @@ Por defecto corre contra el mock (`BELO_ADAPTER=mock`), así que no hace falta a
 
 ## Qué es simulado
 
-- **Los datos de Sofía son sintéticos.** El proyecto no usa datos reales de ninguna persona.
+- **Los datos de Sofía son sintéticos**, incluido su historial de movimientos. El proyecto no usa datos reales de ninguna persona.
 - **Las alcancías y el pago de servicios** no están en la V1 del MCP: se ejecutan contra el mock con el badge SIMULATED.
 - **Cualquier operación que la V1 no permita** para un par de monedas cae al mock y se marca como SIMULATED. Nunca se finge una operación en vivo.
 
 ## Casos de seguridad
 
-Once pruebas escritas antes de la interfaz. Entre otras: el colchón nunca se rompe, un doble clic no ejecuta dos veces, un timeout no duplica la operación, un prompt injection no genera movimientos y la conversión se retiene si el dólar empeora más de 2%. La lista completa está en [`backend/tests/README.md`](backend/tests/README.md).
+Doce pruebas escritas antes de la interfaz. Entre otras: un patrón detectado no se aplica sin confirmación, el colchón nunca se rompe, un doble clic no ejecuta dos veces, un timeout no duplica la operación, un prompt injection no genera movimientos y la conversión se retiene si el dólar empeora más de 2%. La lista completa está en [`backend/tests/README.md`](backend/tests/README.md).
 
 ## Hacia dónde puede crecer
 

@@ -1,6 +1,6 @@
 # tests
 
-Los 11 casos de seguridad, escritos antes que la interfaz y corridos contra `MockBeloAdapter`. Detalle en [`docs/caso-de-prueba.md`](../../docs/caso-de-prueba.md).
+Los 12 casos de seguridad, escritos antes que la interfaz y corridos contra `MockBeloAdapter`. Detalle en [`docs/caso-de-prueba.md`](../../docs/caso-de-prueba.md).
 
 | ID | Qué se verifica |
 |---|---|
@@ -15,3 +15,4 @@ Los 11 casos de seguridad, escritos antes que la interfaz y corridos contra `Moc
 | T09 | Si el FX empeora más de 2%, la conversión se retiene; si no, se ejecuta |
 | T10 | La autonomía sube con evidencia y baja con un reverso |
 | T11 | Si el FX mejora 2% o más antes del vencimiento, propone adelantar con menos USD |
+| T12 | Un patrón detectado por el perfilador se propone como regla y no se aplica sin confirmación |
