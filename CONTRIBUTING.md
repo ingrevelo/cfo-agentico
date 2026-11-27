@@ -38,7 +38,7 @@ front: muestra el badge SIMULATED en el MCP Log
 
 El detalle por persona, rama y hora está en [`docs/ruta-de-trabajo.md`](docs/ruta-de-trabajo.md).
 
-0. Publicar la URL pública el viernes (Docker en Render) y desplegar con cada merge a `main`.
+0. Publicar la URL pública el viernes (Docker en el droplet de DigitalOcean) y desplegar con cada merge a `main`.
 1. Congelar el contrato de `BeloPort` y el `MockBeloAdapter` con los datos de `data/sofia-demo.json`.
 2. Motor de reglas, juez y máquina de estados, con los tests T01–T11.
 3. Grafo del agente y prompts.

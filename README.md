@@ -90,6 +90,7 @@ Los parámetros exactos de cada tool se confirman con el kit del kickoff.
 | Frontend | React + TypeScript |
 | Datos | SQLite |
 | Integración | MCP V1 de Belo detrás de `BeloPort` |
+| Despliegue | Docker Compose en un droplet de DigitalOcean, con Caddy (HTTPS), dominio en Cloudflare y GitHub Actions |
 
 Detalle de cada elección, quién hace qué y el plan hora a hora en [`docs/ruta-de-trabajo.md`](docs/ruta-de-trabajo.md).
 
@@ -167,8 +168,8 @@ Doce pruebas escritas antes de la interfaz. Entre otras: un patrón detectado no
 
 | Integrante | Rol |
 |---|---|
-| Julia Arizbeth Gómez Gámez | AI Product Builder / UX |
+| Julia Arizbeth Gómez Gámez | Producto, documentación y pitch |
 | Cesar David Revelo Apraez | AI/ML y orquestación |
-| Vanessa Yareli Hernández Cázares | Backend |
-| Juan Carlos Pastas Valencia | Validaciones y datos |
-| Brigitte Aponte | Producto, negocio y pitch |
+| Vanessa Yareli Hernández Cázares | Validaciones y datos |
+| Juan Carlos Pastas Valencia | Backend y despliegue |
+| Brigitte Aponte | Frontend |

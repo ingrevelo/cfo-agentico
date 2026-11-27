@@ -51,20 +51,36 @@ El LLM se usa en cuatro lugares, todos de solo lectura: nombrar los patrones que
 | Pieza | Elección | Por qué |
 |---|---|---|
 | Forma | **Un solo servicio**: una imagen Docker de varias etapas. Node compila el frontend y FastAPI sirve esos archivos en `/` y la API en `/api` | Una sola URL, sin CORS ni dos despliegues que sincronizar |
-| Plataforma | **Propuesta: Render** (Web Service desde Docker, conectado a GitHub) | Despliega solo con cada merge a `main`, da HTTPS y guarda los secretos fuera del repo |
-| Plan | **Propuesta: Starter (unos USD 7 al mes)** durante el fin de semana | El plan gratuito se duerme tras 15 minutos sin visitas y tarda cerca de un minuto en despertar; un jurado puede pensar que la app no funciona |
+| Servidor | **Droplet de DigitalOcean del equipo** (ya contratado), con Docker y Docker Compose | Sin costo extra, siempre encendido (no se duerme cuando entra un jurado) y bajo nuestro control |
+| Imagen | **GitHub Actions** construye la imagen con cada merge a `main` y la publica en GitHub Container Registry (`ghcr.io`), etiquetada con el commit | El droplet no compila Node ni Python: solo descarga y arranca, así que basta con poca memoria |
+| Despliegue automático | El mismo workflow entra por SSH al droplet, corre `docker compose pull && docker compose up -d` y espera a que `/api/salud` responda | Cada merge a `main` queda en la URL en pocos minutos |
+| Dominio | Un subdominio del **dominio de pruebas del equipo en Cloudflare** (por ejemplo `cfo.<dominio>`), con un registro A hacia la IP del droplet | El dominio ya está pagado y el DNS de Cloudflare se propaga en minutos |
+| HTTPS | **Caddy** como proxy inverso delante de la app, con certificado automático de Let's Encrypt. El registro en Cloudflare empieza en **"DNS only"** (nube gris) para que Caddy obtenga el certificado; después se puede activar el proxy de Cloudflare (nube naranja) con SSL en **"Full (strict)"** | Así no hay redirecciones en bucle ni certificados rechazados |
+| ¿Vercel o Firebase para el frontend? | **No hace falta**: el frontend va dentro de la misma imagen y lo sirve FastAPI | Separarlo suma un segundo despliegue, CORS y otra URL que configurar. Si el equipo insiste en separarlo, la mejor opción sería Cloudflare Pages en `app.<dominio>`, porque el dominio ya está ahí |
 | Datos | SQLite dentro del contenedor, sembrado al arrancar con `data/sofia-demo.json` e `historial-sofia.json` | Cada despliegue empieza con la Sofía de la demo |
 | Varios visitantes | Botón **Reiniciar demo** (`POST /api/demo/reiniciar`) visible en la app | Los jurados comparten la misma instancia; cualquiera puede volver al estado inicial |
-| Salud | `GET /api/salud` como health check de Render | Render no publica una versión que no arranca |
-| Secretos | `ANTHROPIC_API_KEY`, `BELO_MCP_URL` y `BELO_BELOTAG` como variables de entorno en Render | Nunca en el repo ([`CONTRIBUTING.md`](../CONTRIBUTING.md), regla 5) |
+| Salud | `GET /api/salud` como healthcheck de Docker Compose y como último paso del workflow | Si la versión nueva no responde, el workflow falla y se vuelve a la imagen anterior |
+| Secretos | Un `.env` en el droplet, fuera del repo y con permisos `600`, con `ANTHROPIC_API_KEY`, `BELO_MCP_URL` y `BELO_BELOTAG`. En GitHub Secrets solo van `DO_HOST`, `DO_USER` y `DO_SSH_KEY` | Nunca en el repo ([`CONTRIBUTING.md`](../CONTRIBUTING.md), regla 5) |
 | Seguridad del enlace público | En la URL pública, **todo lo que mueve dinero corre contra el mock** (SIMULATED). Solo las tools de lectura pueden ir en vivo, y solo si Belo confirma que es seguro | Un enlace abierto no puede aprobar movimientos reales con la cuenta del equipo |
-| Respaldo | La demo también corre en local con un comando, y hay un video grabado el sábado | Si la plataforma falla durante el pitch |
+| Seguridad del servidor | Usuario `deploy` sin privilegios de root (solo Docker), una llave SSH exclusiva para GitHub Actions y firewall abierto solo en 22, 80 y 443. Límite de memoria y `restart: unless-stopped` en Compose | El droplet es nuestro: la llave del workflow solo sirve para desplegar |
+| Respaldo | La demo también corre en local con un comando, y hay un video grabado el sábado | Si el servidor falla durante el pitch |
+
+### Preparar el droplet (Cesar, idealmente antes del kickoff)
+
+1. Confirmar sistema operativo y memoria (1 GB alcanza, porque el droplet no compila) y si ya corre otros servicios en los puertos 80 o 443. Si ya hay un proxy (Nginx, Caddy, Traefik), se agrega un bloque para la app en lugar de instalar Caddy.
+2. Instalar Docker y el plugin de Compose.
+3. Crear el usuario `deploy` en el grupo `docker`, con una llave SSH nueva solo para GitHub Actions.
+4. Abrir solo los puertos 22, 80 y 443 en el firewall.
+5. En Cloudflare, crear el registro A del subdominio (por ejemplo `cfo`) hacia la IP del droplet, en modo "DNS only".
+6. Crear `/opt/cfo-agentico/.env` con los secretos (permisos `600`) y cargar `DO_HOST`, `DO_USER` y `DO_SSH_KEY` en los Secrets del repositorio.
+
+Desde ahí, Juan Carlos sube los archivos de despliegue en `api/deploy-digitalocean` y el primer merge publica la URL.
 
 ### Decisiones a votar en el kickoff
 
 1. **Máquina de estados en Python puro (recomendado) o LangGraph.** La aprobación de Sofía llega como una petición HTTP minutos después, y el estado de cada movimiento ya vive en SQLite y lo valida `domain/estados.py`. El `interrupt()` y el checkpointer de LangGraph duplicarían eso y suman una curva de aprendizaje en 43 horas. Los nodos se escriben como funciones con los mismos nombres de [`backend/app/agent/README.md`](../backend/app/agent/README.md), así que si sobra tiempo se pueden envolver en LangGraph sin reescribirlos.
 2. **Proveedor del LLM: Claude (recomendado).** Structured outputs con Pydantic y respaldo ante rechazos sin código extra. Si alguien del equipo tiene créditos de otro proveedor, se puede cambiar: todo el acceso al LLM queda detrás de una sola función en `agent/llm.py`.
-3. **Plataforma y plan del despliegue: Render Starter (recomendado).** Hay que definir quién lo paga. Alternativas: Railway o Fly.io, con el mismo Dockerfile.
+3. **Nombre del subdominio** en el dominio de pruebas de Cloudflare (por ejemplo `cfo.<dominio>`).
 4. **Quién presenta la demo** y desde qué portátil.
 
 ---
@@ -76,7 +92,7 @@ Cada persona es dueña de carpetas distintas y trabaja con los prefijos de rama 
 | Integrante | Rol | Es dueño de | Prefijos de rama |
 |---|---|---|---|
 | **Cesar** | AI/ML y orquestación | `ports/`, `adapters/`, `agent/` | `adapter/…`, `agent/…` |
-| **Juan Carlos** | Backend | `domain/modelos.py`, `motor.py`, `juez.py`, `estados.py`, `autonomia.py`, `db/`, `api/`, `Dockerfile` | `domain/…`, `api/…` |
+| **Juan Carlos** | Backend y despliegue | `domain/modelos.py`, `motor.py`, `juez.py`, `estados.py`, `autonomia.py`, `db/`, `api/`, `Dockerfile`, `deploy/`, `.github/workflows/` | `domain/…`, `api/…` |
 | **Vanessa** | Validaciones y datos | `domain/fx.py`, `domain/perfilador.py`, `tests/`, `data/` | `domain/…` |
 | **Brigitte** | Frontend | `frontend/` | `front/…` |
 | **Julia** | Producto, documentación y pitch | `README.md`, `docs/`, deck, video y HackRadar | `docs/…` |
@@ -100,12 +116,12 @@ Una rama por tarea, creada desde `main` actualizado justo antes de empezarla, co
 | `front/cliente-api` | Tipos generados del OpenAPI y conexión de las pantallas a la API real | 3 | — | Brigitte |
 | `agent/perfilado` | `profile_patterns`: el LLM nombra los patrones y redacta las reglas propuestas | 4 | T12 (con Vanessa) | Vanessa |
 
-#### Juan Carlos · Backend
+#### Juan Carlos · Backend y despliegue
 
 | Rama | Qué entrega | Bloque | Tests | Revisa |
 |---|---|---|---|---|
 | `api/esqueleto` | Proyecto con uv, FastAPI, ruff y pytest; `GET /api/salud` | 0 | — | Cesar |
-| `api/deploy-render` | Dockerfile de varias etapas (compila el frontend y lo sirve FastAPI), `render.yaml` y la URL pública funcionando | 1 | Health check en Render | Cesar |
+| `api/deploy-digitalocean` | `Dockerfile` de varias etapas (compila el frontend y lo sirve FastAPI), `deploy/docker-compose.yml`, `deploy/Caddyfile` y `.github/workflows/deploy.yml`; la URL pública funcionando | 1 | `/api/salud` responde en la URL | Cesar |
 | `domain/modelos` | `Regla`, `Vencimiento`, `Plan`, `Movimiento`, `EstadoMovimiento`, `DecisionJuez` | 1 | — | Cesar |
 | `api/contrato-ejemplos` | Endpoints con respuestas de ejemplo, para que el frontend arranque | 1 | — | Brigitte |
 | `domain/motor-juez` | Motor (1.500 → 900 / 120 / 380 / 100) y juez (colchón, tope, Caso Rojo) | 2 | T03, T04, T07 | Vanessa |
@@ -172,12 +188,12 @@ Horas en hora de Colombia. Cada bloque cierra con un **checkpoint** de 10 minuto
 
 - **Todos:** escuchar el kickoff, leer el kit del MCP y las bases de entrega, y votar las 4 decisiones de la sección 1.
 - **Julia:** hacer las 7 preguntas a los mentores; agregar una octava: si se puede usar el MCP en vivo desde un servidor público.
-- **Cesar:** probar `auth.sign_in` y `account.balances` con el kit.
+- **Cesar:** probar `auth.sign_in` y `account.balances` con el kit. Si no quedó listo antes del kickoff, preparar el droplet (ver "Preparar el droplet").
 - **Juan Carlos:** `api/esqueleto`. **Brigitte:** `front/esqueleto`. **Vanessa:** `domain/datos-kit`.
 
 ### Bloque 1 · Viernes 18:30–23:30 · Contratos, esqueleto y URL pública
 
-- **Juan Carlos:** `domain/modelos` y `api/contrato-ejemplos` (C1 y C3), y `api/deploy-render`: la URL pública muestra el frontend y responde `/api/salud`.
+- **Juan Carlos:** `domain/modelos` y `api/contrato-ejemplos` (C1 y C3), y `api/deploy-digitalocean`: la URL pública muestra el frontend y responde `/api/salud`.
 - **Cesar:** `adapter/belo-port` y `adapter/mock-belo` (C2).
 - **Vanessa:** `domain/tests-seguridad`.
 - **Brigitte:** `front/pantalla-reglas` y `front/pantalla-plan` con los JSON de ejemplo.
@@ -239,8 +255,8 @@ En este orden, de lo primero que se sacrifica a lo último:
 
 | Riesgo | Plan |
 |---|---|
-| El despliegue falla a última hora | La URL existe desde el viernes y cada merge se despliega; si un despliegue falla, Render mantiene la versión anterior |
-| La app se duerme cuando entra un jurado | Plan Starter; si se usa el gratuito, visitar la URL antes del pitch y avisar en el README que la primera carga puede tardar |
+| El despliegue falla a última hora | La URL existe desde el viernes y cada merge se despliega. Cada imagen queda etiquetada con su commit: volver atrás es cambiar la etiqueta y correr `docker compose up -d` |
+| El droplet se cae o se queda sin memoria | Reinicio automático y límite de memoria en Compose; demo local y video de respaldo. Cesar tiene acceso a la consola de DigitalOcean |
 | Dos jurados prueban al mismo tiempo | Botón Reiniciar demo y estado inicial sembrado en cada arranque |
 | El kit del MCP llega tarde o no funciona | Todo corre contra el mock desde el inicio; el adaptador live se conecta cuando funcione |
 | El LLM falla o tarda | Textos de plantilla por cada uso del LLM y video de respaldo |
