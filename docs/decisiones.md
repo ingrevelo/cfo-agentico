@@ -21,6 +21,8 @@ Registro corto de lo que decidimos, lo que falta decidir y lo que hay que pregun
 
 ## Pendientes
 
+Propuestas y recomendaciones en [`ruta-de-trabajo.md`](ruta-de-trabajo.md#decisiones-a-votar-en-el-kickoff); se votan en el kickoff.
+
 - [ ] **LangGraph o máquina de estados en Python puro** para el grafo del agente.
 - [ ] **Proveedor del LLM.**
 - [ ] **$belotag de los 5 integrantes**, registrados en Equipos de HackRadar.

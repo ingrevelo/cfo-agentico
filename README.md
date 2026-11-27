@@ -91,6 +91,8 @@ Los parámetros exactos de cada tool se confirman con el kit del kickoff.
 | Datos | SQLite |
 | Integración | MCP V1 de Belo detrás de `BeloPort` |
 
+Detalle de cada elección, quién hace qué y el plan hora a hora en [`docs/ruta-de-trabajo.md`](docs/ruta-de-trabajo.md).
+
 ## Estructura del repositorio
 
 ```
@@ -102,6 +104,7 @@ cfo-agentico/
 │   ├── arquitectura.md      Piezas, estados, autonomía, juez y disparadores
 │   ├── caso-de-prueba.md    Especificación de punta a punta con Sofía y los 12 casos de seguridad
 │   ├── decisiones.md        Decisiones tomadas, pendientes y preguntas para Belo
+│   ├── ruta-de-trabajo.md   Tecnologías, despliegue, roles, ramas y plan por bloques
 │   └── diagramas/           Imágenes de la arquitectura, los estados y la autonomía
 ├── data/
 │   ├── sofia-demo.json      Reglas y saldos sintéticos de la demo
@@ -121,6 +124,8 @@ cfo-agentico/
 Cada carpeta tiene un `README.md` con su responsabilidad y lo que se va a construir ahí.
 
 ## Cómo correrlo
+
+**Demo en línea:** _enlace pendiente; se publica el viernes 27 por la noche y se actualiza con cada merge a `main`._ En la versión pública todo lo que mueve dinero corre contra el mock (SIMULATED), y el botón **Reiniciar demo** vuelve al estado inicial.
 
 > Se completa durante el hackathon. El flujo previsto es:
 
