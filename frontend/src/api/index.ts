@@ -1,11 +1,13 @@
 // ÚNICO PUNTO DE CAMBIO para conectar el backend.
 //
-// Hoy: MockCfoApi, que guarda todo en memoria y no necesita servidor.
-// Mañana (rama front/cliente-api): se escribe CfoApiHttp con fetch('/api/...') y acá
-// queda `export const api: CfoApi = new CfoApiHttp()`. Ninguna pantalla se toca.
+// Por defecto usa CfoApiHttp (backend real en /api, con el mock como respaldo y para lo que el
+// backend todavía no tiene). Con VITE_CFO_API=mock usa solo el mock, sin servidor.
 import type { CfoApi } from './CfoApi';
+import { CfoApiHttp } from './http/CfoApiHttp';
 import { MockCfoApi } from './mock/MockCfoApi';
 
-export const api: CfoApi = new MockCfoApi();
+const modo = import.meta.env.VITE_CFO_API ?? 'http';
+
+export const api: CfoApi = modo === 'mock' ? new MockCfoApi() : new CfoApiHttp(new MockCfoApi());
 
 export type { CfoApi };
