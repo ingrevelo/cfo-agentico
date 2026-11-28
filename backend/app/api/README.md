@@ -24,6 +24,19 @@ Los esquemas están en [`esquemas.py`](esquemas.py) y cada endpoint responde hoy
 
 `GET /api/salud` lo define `api/esqueleto`.
 
+## Qué es real y qué sigue en ejemplos (28-nov)
+
+| Endpoints | Estado | De dónde sale |
+|---|---|---|
+| `GET` y `PUT /api/reglas` | **Real** | SQLite (`db/`): reglas duras, vencimientos y niveles. Los saldos siguen saliendo de los datos sintéticos hasta que exista `BeloPort` |
+| `POST /api/perfilado` y `…/confirmar` | **Real** | `domain/perfilador.py` detecta, `agent/redaccion.py` nombra (o la plantilla) y la confirmación guarda el vencimiento con `origen: perfilado`. Los movimientos con instrucciones quedan en el log como `INTENTO_BLOQUEADO` |
+| `GET /api/log` | **Real** | `mcp_log` de SQLite |
+| `GET` y `POST /api/autonomia` | **Real** (niveles) | SQLite. Solo suben a nivel 4 `apartar_impuestos` y `rendimiento_usdt`. La solicitud usa el historial simulado del caso hasta que exista `domain/autonomia` |
+| `POST /api/demo/reiniciar` | **Real** | `db/semilla.py` |
+| `POST /api/ingresos/simular`, `GET /api/planes/…`, `PATCH …/movimientos/…`, `POST …/aprobar`, `POST /api/demo/avanzar` | Ejemplos | Esperan el motor, el juez y la máquina de estados (`domain/`) |
+
+Archivos: `rutas_reales.py` (rutas), `servicio_reglas.py`, `servicio_perfilado.py` y `dependencias.py` (sesión de SQLite y LLM). Tests en `backend/tests/test_endpoints_reales.py`.
+
 ## Reglas del contrato
 
 - **Montos como texto decimal** (`"900.00"`), nunca números de punto flotante. En el backend son `Decimal`.

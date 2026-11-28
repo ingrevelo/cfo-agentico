@@ -11,7 +11,7 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session
 
-from app.api import rutas_ejemplo
+from app.api import rutas_ejemplo, rutas_reales
 from app.db import crear_engine, init_db, sembrar_sofia
 
 
@@ -45,8 +45,9 @@ def create_app() -> FastAPI:
     def salud() -> dict[str, str]:
         return {"estado": "ok", "servicio": "cfo-agentico"}
 
-    # Contrato C3 con respuestas de ejemplo; api/endpoints-reales lo reemplaza sin cambiar rutas.
-    # Va antes de montar el frontend en "/", para que /api no quede tapado por los estáticos.
+    # Endpoints reales primero y, para lo que falta, el contrato C3 con respuestas de ejemplo.
+    # Van antes de montar el frontend en "/", para que /api no quede tapado por los estáticos.
+    application.include_router(rutas_reales.router)
     application.include_router(rutas_ejemplo.router)
 
     frontend_dist = Path(os.getenv("FRONTEND_DIST", "/app/static"))

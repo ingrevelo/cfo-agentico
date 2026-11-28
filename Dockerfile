@@ -19,6 +19,9 @@ COPY backend/pyproject.toml backend/uv.lock* ./
 RUN uv sync --no-dev --no-install-project
 COPY backend/ ./
 COPY data/ /app/data/
+# El código calcula la carpeta de datos desde su propia ruta (`parents[...] / "data"`), que en la
+# imagen cae en /data: la semilla, los ejemplos de la API y el MCP simulado la leen desde ahí.
+COPY data/ /data/
 COPY --from=frontend /frontend/dist /app/static
 RUN useradd --system --uid 10001 cfo
 USER cfo
