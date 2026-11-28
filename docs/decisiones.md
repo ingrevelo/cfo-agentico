@@ -22,6 +22,7 @@ Registro corto de lo que decidimos, lo que falta decidir y lo que hay que pregun
 | D14 | **La autonomía ganada nunca salta el código de Belo:** subir de nivel significa que el agente prepara y envía la operación sin preguntar en nuestra app | Belo exige el código en toda operación que mueve dinero; el pitch no puede prometer que el agente mueve dinero solo |
 | D15 | **El alquiler se puede pagar con una transferencia real** (CBU o alias); **apartar en alcancías sigue SIMULATED** | El MCP permite transferir a terceros, pero las alcancías solo se consultan |
 | D16 | **La URL pública no usa el MCP real.** Lo en vivo se muestra desde el portátil de quien presenta, con un solo movimiento de monto chico | El login es interactivo y con una cuenta real, Belo pide montos chicos y las llamadas desde servidores no conectan |
+| D17 | **La app es una PWA:** instalable en el celular, con `vite-plugin-pwa`. El service worker guarda solo la cáscara de la app; todo `/api` va siempre a la red y, sin conexión, no se puede aprobar nada. Las notificaciones push son opcionales y están en la lista de recortes | La historia ocurre en el celular de Sofía cuando le llega un pago, y la demo se ve mejor en un teléfono. Un plan o un saldo guardado en caché podría mostrar dinero que ya no está |
 
 ## Pendientes
 
