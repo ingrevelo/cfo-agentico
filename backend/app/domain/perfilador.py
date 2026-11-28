@@ -92,11 +92,17 @@ class VencimientoConfirmado:
 
 @dataclass(frozen=True)
 class ResultadoPerfilado:
-    """Salida del perfilado en modo sombra con propuestas y eventos sospechosos."""
+    """Salida del perfilado en modo sombra con propuestas, pasamanos y sospechosos."""
 
     propuestas: list[PropuestaRegla] = field(default_factory=list)
+    pasamanos: list[PatronRecurrente] = field(default_factory=list)
     intentos_bloqueados: list[MovimientoHistorial] = field(default_factory=list)
     llamadas_escritura_belo: int = 0
+
+
+def es_pasamanos(patron: PatronRecurrente) -> bool:
+    """Distingue el hábito de pasamanos (retiro tras cobro) de una obligación recurrente."""
+    return patron.tipo == "conversion_y_retiro"
 
 
 def cargar_historial_json(ruta: Path) -> list[MovimientoHistorial]:
@@ -198,15 +204,23 @@ def perfilar_en_modo_sombra(
     movimientos: list[MovimientoHistorial],
     nombres_por_contraparte: dict[str, tuple[str, str]] | None = None,
 ) -> ResultadoPerfilado:
-    """Genera propuestas en estado PENDIENTE_CONFIRMACION sin efectuar escrituras."""
+    """Genera propuestas en estado PENDIENTE_CONFIRMACION sin efectuar escrituras.
+
+    Los patrones de tipo `conversion_y_retiro` se separan en `pasamanos` para que
+    no se ofrezcan como vencimientos sino como contrafactuales (Fase 1, P4).
+    """
     patrones, sospechosos = detectar_recurrentes(movimientos)
     mapa = nombres_por_contraparte or {}
     propuestas: list[PropuestaRegla] = []
-    for idx, patron in enumerate(patrones, start=1):
+    pasamanos: list[PatronRecurrente] = []
+    for patron in patrones:
+        if es_pasamanos(patron):
+            pasamanos.append(patron)
+            continue
         nombre, categoria = mapa.get(patron.contraparte, (patron.contraparte, patron.tipo))
         propuestas.append(
             PropuestaRegla(
-                id=f"prop-{idx:03d}",
+                id=f"prop-{len(propuestas) + 1:03d}",
                 patron=patron,
                 nombre_sugerido=nombre,
                 categoria=categoria,
@@ -215,6 +229,7 @@ def perfilar_en_modo_sombra(
         )
     return ResultadoPerfilado(
         propuestas=propuestas,
+        pasamanos=pasamanos,
         intentos_bloqueados=sospechosos,
         llamadas_escritura_belo=0,
     )
