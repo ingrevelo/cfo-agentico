@@ -30,18 +30,19 @@ Propuestas y recomendaciones en [`ruta-de-trabajo.md`](ruta-de-trabajo.md#decisi
 - [ ] **LangGraph o máquina de estados en Python puro** para el grafo del agente.
 - [ ] **Proveedor del LLM.**
 - [ ] **$belotag de los 5 integrantes**, registrados en Equipos de HackRadar. Para el MCP, además, cuenta con identidad verificada y el correo dado de alta por Belo.
-- [ ] **Actualizar `BeloPort`, el MCP simulado y el anexo A1 de `caso-de-prueba.md`** con los nombres reales de las tools, cuando tengamos la lista.
+- [x] **Lista de tools reales** en [`belo-mcp/tools.md`](belo-mcp/tools.md) (18 tools, 27-nov).
+- [ ] **Actualizar `BeloPort`, el MCP simulado y el anexo A1 de `caso-de-prueba.md`** con esos nombres.
 - [ ] **Hacer público el repositorio** antes de entregar en HackRadar.
 
 ## Preguntas para los mentores de Belo
 
-Actualizadas el 27-nov con la [guía de conexión del MCP](https://app.notion.com/p/belo/belo-para-agentes-c-mo-conectar-el-MCP-hackathon-27-11-424b23cb6b46819cb3b9edbc2057bb49). Las cinco primeras son urgentes.
+Actualizadas el 27-nov con la [guía de conexión del MCP](https://app.notion.com/p/belo/belo-para-agentes-c-mo-conectar-el-MCP-hackathon-27-11-424b23cb6b46819cb3b9edbc2057bb49). Las preguntas 2 a 5 ya tienen respuesta con la [lista de tools](belo-mcp/tools.md); la 1 sigue urgente.
 
 1. **Cloudflare responde 403 a nuestro cliente MCP en Python** (SDK oficial `mcp`), incluso en el descubrimiento de OAuth. ¿Pueden habilitar clientes propios, o el MCP solo admite Claude, Cursor, VS Code, Codex y ChatGPT de escritorio?
-2. ¿Cuáles son los nombres y parámetros exactos de las tools? ¿Pueden compartir respuestas de ejemplo?
-3. ¿Hay alguna tool de rendimiento (por ejemplo, USDT rindiendo)? Nuestro plan deja el excedente "rindiendo en USDT".
-4. ¿Se puede mover dinero a una alcancía desde el MCP, o solo consultarlas?
-5. ¿Cómo se entera el agente de que la persona aprobó el link: la tool espera, hay que consultar el estado, o aparece en los movimientos?
+2. ~~¿Nombres y parámetros de las tools?~~ **Respondida:** 18 tools `belo_*` en [`belo-mcp/tools.md`](belo-mcp/tools.md). Sigue abierto: ¿pueden compartir respuestas de ejemplo?
+3. ~~¿Tool de rendimiento?~~ **Respondida:** no hay una tool aparte; `belo_get_balances` trae `yield.rate` y lo ganado por moneda. El excedente queda en USDT y mostramos su rendimiento con ese dato.
+4. ~~¿Mover dinero a una alcancía?~~ **Respondida:** no; las bóvedas solo se consultan (`belo_list_vaults`, `belo_get_vault`). Confirma D15.
+5. ~~¿Cómo se entera el agente de la aprobación?~~ **Respondida:** `belo_confirm_*` deja la transacción en `awaiting_approval` (notificación en la app de Belo, o un enlace). Con `waitForApproval` la tool espera; si no, se consulta `belo_get_transaction` hasta `success` o `failed`.
 6. ¿Las operaciones son siempre reales, o hay saldo de prueba? ¿Qué monto mínimo recomiendan?
 7. ¿La conversión o la transferencia aceptan una referencia o clave de idempotencia?
 8. ¿Se puede aprobar un plan con varios movimientos en un solo link?

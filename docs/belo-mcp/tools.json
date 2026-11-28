@@ -1,0 +1,471 @@
+{
+  "info": {
+    "servidor": "https://b2b.belo.app/mcp",
+    "obtenido": "2026-11-27",
+    "fuente": "Transcripción de las definiciones vistas desde el conector de claude.ai (permiso Consultar). No es un volcado de tools/list: tipos y restricciones pueden diferir del esquema real.",
+    "notas": [
+      "Montos como texto decimal.",
+      "Los '...redes cripto' en los enum resumen una lista más larga."
+    ]
+  },
+  "tools": [
+    {
+      "name": "belo_get_balances",
+      "grupo": "solo_lectura",
+      "mueveDinero": false,
+      "soloLectura": true,
+      "permiso": "account:read",
+      "description": "Saldo disponible por moneda, con yield.rate y earned (total, hoy, mes).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "belo_list_transactions",
+      "grupo": "solo_lectura",
+      "mueveDinero": false,
+      "soloLectura": true,
+      "permiso": "transactions:read",
+      "description": "Historial de movimientos, del más reciente al más antiguo, con metadata y receipt. No incluye cotizaciones sin confirmar.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "deposit",
+              "withdrawal",
+              "swap",
+              "transfer",
+              "pix_payout"
+            ]
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "belo_get_transaction",
+      "grupo": "solo_lectura",
+      "mueveDinero": false,
+      "soloLectura": true,
+      "permiso": "transactions:read",
+      "description": "Una transacción con su estado: awaiting_approval, pending, success o failed.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "transactionId"
+        ]
+      }
+    },
+    {
+      "name": "belo_get_transfer_networks",
+      "grupo": "solo_lectura",
+      "mueveDinero": false,
+      "soloLectura": true,
+      "permiso": "transfers:read",
+      "description": "Redes para enviar una moneda, con mínimo, máximo y comisión.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "currency"
+        ]
+      }
+    },
+    {
+      "name": "belo_list_contacts",
+      "grupo": "solo_lectura",
+      "mueveDinero": false,
+      "soloLectura": true,
+      "permiso": "contacts:read",
+      "description": "Agenda: cuentas propias, favoritos y transferencias recientes (máximo 30).",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "search": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "addressType": {
+            "type": "string",
+            "enum": [
+              "BELOTAG",
+              "CBU",
+              "CVU",
+              "ALIAS",
+              "PIX",
+              "BREB",
+              "ACH",
+              "SEPA",
+              "...redes cripto"
+            ]
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "belo_get_contact",
+      "grupo": "solo_lectura",
+      "mueveDinero": false,
+      "soloLectura": true,
+      "permiso": "contacts:read",
+      "description": "Un contacto con todas sus cuentas y direcciones.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "contactId": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{24}$"
+          }
+        },
+        "required": [
+          "contactId"
+        ]
+      }
+    },
+    {
+      "name": "belo_get_deposit_addresses",
+      "grupo": "solo_lectura",
+      "mueveDinero": false,
+      "soloLectura": true,
+      "permiso": "deposits:read",
+      "description": "Direcciones fijas para fondear la cuenta, por moneda y red.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "belo_list_vaults",
+      "grupo": "solo_lectura",
+      "mueveDinero": false,
+      "soloLectura": true,
+      "permiso": "vaults:read",
+      "description": "Bóvedas de ahorro: nombre, meta, saldo y si rinden. No se puede meter ni sacar dinero desde este servidor.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "currencyCode": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 20
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "belo_get_vault",
+      "grupo": "solo_lectura",
+      "mueveDinero": false,
+      "soloLectura": true,
+      "permiso": "vaults:read",
+      "description": "Una bóveda con lo ganado: total, hoy, ayer, semana, mes y año.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "vaultId": {
+            "type": "string",
+            "pattern": "^[0-9]+$"
+          }
+        },
+        "required": [
+          "vaultId"
+        ]
+      }
+    },
+    {
+      "name": "belo_get_pix_payout_price",
+      "grupo": "solo_lectura",
+      "mueveDinero": false,
+      "soloLectura": true,
+      "permiso": "pix:read",
+      "description": "Precio actual del par con que se liquida un Pix. Informativo.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "brlAmount": {
+            "type": "string",
+            "description": "monto como texto decimal"
+          }
+        },
+        "required": []
+      }
+    },
+    {
+      "name": "belo_find_pix_recipient",
+      "grupo": "solo_lectura",
+      "mueveDinero": false,
+      "soloLectura": true,
+      "permiso": "pix:read",
+      "description": "Titular de una llave Pix. Gasta cuota de consultas: una vez por llave.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "CPF, CNPJ, correo, teléfono, llave aleatoria o QR"
+          }
+        },
+        "required": [
+          "address"
+        ]
+      }
+    },
+    {
+      "name": "belo_preview_swap",
+      "grupo": "cotizacion",
+      "mueveDinero": false,
+      "soloLectura": false,
+      "permiso": "swaps:execute",
+      "description": "Cotiza una conversión: id, precio, montos y vencimiento.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "pairCode": {
+            "type": "string",
+            "description": "BASE/QUOTE, p. ej. USDT/ARGt"
+          },
+          "quoteAmount": {
+            "type": "string",
+            "description": "monto como texto decimal"
+          },
+          "quoteCurrency": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "BUY",
+              "SELL"
+            ]
+          }
+        },
+        "required": [
+          "pairCode",
+          "quoteAmount",
+          "quoteCurrency",
+          "type"
+        ]
+      }
+    },
+    {
+      "name": "belo_preview_transfer",
+      "grupo": "cotizacion",
+      "mueveDinero": false,
+      "soloLectura": false,
+      "permiso": "transfers:initiate",
+      "description": "Cotiza un envío cripto, un retiro en pesos a CVU/CBU/alias o una transferencia interna de Belo. No sirve para Pix. Devuelve id, monto, comisión, tasa, vencimiento y debits.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "addressType": {
+            "type": "string",
+            "enum": [
+              "TRON",
+              "POLYGON",
+              "SOLANA",
+              "...redes cripto",
+              "CVU",
+              "CBU",
+              "ALIAS",
+              "QR",
+              "BELOTAG",
+              "EMAIL",
+              "USER",
+              "DEPAY_QR"
+            ]
+          },
+          "currency": {
+            "type": "string"
+          },
+          "quoteAmount": {
+            "type": "string",
+            "description": "monto como texto decimal"
+          },
+          "quoteCurrency": {
+            "type": "string",
+            "description": "por defecto igual a currency"
+          }
+        },
+        "required": [
+          "address",
+          "addressType",
+          "currency",
+          "quoteAmount"
+        ]
+      }
+    },
+    {
+      "name": "belo_preview_pix_payout",
+      "grupo": "cotizacion",
+      "mueveDinero": false,
+      "soloLectura": false,
+      "permiso": "pix:write",
+      "description": "Cotiza un pago en reales a una llave Pix; se liquida desde USDT o BRAt.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "description": "llave Pix o QR"
+          },
+          "amount": {
+            "type": "string",
+            "description": "monto en BRL como texto decimal"
+          }
+        },
+        "required": [
+          "address",
+          "amount"
+        ]
+      }
+    },
+    {
+      "name": "belo_accept_pix_payout_terms",
+      "grupo": "aceptacion_terminos",
+      "mueveDinero": false,
+      "soloLectura": false,
+      "permiso": "pix:write",
+      "description": "Registra la aceptación de los términos de Pix. No mueve fondos; solo con un sí explícito. Genera un enlace de aprobación.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "acceptedTerms": {
+            "type": "boolean",
+            "const": true
+          },
+          "requestId": {
+            "type": "string"
+          },
+          "waitForApproval": {
+            "type": "boolean",
+            "description": "esperar la decisión de la persona"
+          }
+        },
+        "required": [
+          "acceptedTerms"
+        ]
+      }
+    },
+    {
+      "name": "belo_confirm_swap",
+      "grupo": "mueve_dinero",
+      "mueveDinero": true,
+      "soloLectura": false,
+      "permiso": "swaps:execute",
+      "description": "Ejecuta la conversión cotizada. Irreversible. Requiere aprobación en Belo.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "id de belo_preview_swap"
+          },
+          "waitForApproval": {
+            "type": "boolean",
+            "description": "esperar la decisión de la persona"
+          }
+        },
+        "required": [
+          "transactionId"
+        ]
+      }
+    },
+    {
+      "name": "belo_confirm_transfer",
+      "grupo": "mueve_dinero",
+      "mueveDinero": true,
+      "soloLectura": false,
+      "permiso": "transfers:initiate",
+      "description": "Envía los fondos cotizados. Irreversible. Requiere aprobación en Belo.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "id de belo_preview_transfer"
+          },
+          "waitForApproval": {
+            "type": "boolean",
+            "description": "esperar la decisión de la persona"
+          }
+        },
+        "required": [
+          "transactionId"
+        ]
+      }
+    },
+    {
+      "name": "belo_confirm_pix_payout",
+      "grupo": "mueve_dinero",
+      "mueveDinero": true,
+      "soloLectura": false,
+      "permiso": "pix:write",
+      "description": "Envía el pago Pix cotizado. Irreversible. Requiere aprobación en Belo.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "transactionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "id de belo_preview_pix_payout"
+          },
+          "waitForApproval": {
+            "type": "boolean",
+            "description": "esperar la decisión de la persona"
+          }
+        },
+        "required": [
+          "transactionId"
+        ]
+      }
+    }
+  ]
+}
