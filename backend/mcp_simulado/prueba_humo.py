@@ -48,10 +48,10 @@ async def main() -> None:
 
         print("\nLecturas")
         ok, b = await llamar(s, "belo_get_balances")
-        usd = next(x for x in b["data"] if x["currencyCode"] == "USD")
+        usd = next(x for x in b["data"] if x["currencyCode"] == "USDC")
         revisar(
             ok and b["simulado"] and usd["available"] == "1500.00",
-            "saldo inicial USD 1500.00, marcado como simulado",
+            "saldo inicial USDC 1500.00, marcado como simulado",
         )
         ok, t = await llamar(s, "belo_list_transactions", limit=5)
         revisar(
@@ -63,13 +63,13 @@ async def main() -> None:
         ok, v = await llamar(s, "belo_list_vaults")
         revisar(ok and v["data"][0]["details"]["name"] == "Impuestos", "bóveda Impuestos")
 
-        print("\nPlan: USD 900 → USDT (aprobación automática)")
+        print("\nPlan: USDC 900 → USDT (aprobación automática)")
         ok, q = await llamar(
             s,
             "belo_preview_swap",
-            pairCode="USDT/USD",
+            pairCode="USDT/USDC",
             quoteAmount="900",
-            quoteCurrency="USD",
+            quoteCurrency="USDC",
             type="BUY",
         )
         revisar(ok and q["status"] == "quoted", "cotización creada, sin debitar")
@@ -82,7 +82,7 @@ async def main() -> None:
         ok, b = await llamar(s, "belo_get_balances")
         saldos = {x["currencyCode"]: x["available"] for x in b["data"]}
         revisar(
-            saldos["USD"] == "600.00" and saldos["USDT"] == "900.00", "USD 600.00 y USDT 900.00"
+            saldos["USDC"] == "600.00" and saldos["USDT"] == "900.00", "USDC 600.00 y USDT 900.00"
         )
 
         print("\nAlquiler: transferencia ARGt a alias con aprobación manual")
@@ -90,7 +90,7 @@ async def main() -> None:
         ok, q = await llamar(
             s,
             "belo_preview_swap",
-            pairCode="USD/ARGt",
+            pairCode="USDC/ARGt",
             quoteAmount="450000",
             quoteCurrency="ARGt",
             type="SELL",
@@ -118,7 +118,7 @@ async def main() -> None:
             "belo_preview_transfer",
             address="x",
             addressType="CBU",
-            currency="USD",
+            currency="USDC",
             quoteAmount="10",
         )
         revisar(not ok and "pesos argentinos" in e, "banco solo para ARGt")
@@ -130,9 +130,9 @@ async def main() -> None:
         ok, q = await llamar(
             s,
             "belo_preview_swap",
-            pairCode="USDT/USD",
+            pairCode="USDT/USDC",
             quoteAmount="10",
-            quoteCurrency="USD",
+            quoteCurrency="USDC",
             type="BUY",
         )
         ok, e = await llamar(s, "belo_confirm_swap", transactionId=q["id"])
@@ -142,7 +142,7 @@ async def main() -> None:
             ok and c["status"] == "success", "la reconciliación encuentra el movimiento hecho (T05)"
         )
         ok, cfg = await llamar(s, "simulado_configurar", fx_usd_ars="1150", fallo="ninguno")
-        revisar(ok and cfg["fx_usd_ars"] == "1150", "cotización USD/ARGt cambiada a 1150 (T09)")
+        revisar(ok and cfg["fx_usd_ars"] == "1150", "cotización USDC/ARGt cambiada a 1150 (T09)")
         await llamar(s, "simulado_reiniciar")
 
     print(f"\n{'Todo bien' if not fallas else f'{len(fallas)} fallas'}")

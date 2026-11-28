@@ -23,6 +23,7 @@ Registro corto de lo que decidimos, lo que falta decidir y lo que hay que pregun
 | D15 | **El alquiler se puede pagar con una transferencia real** (CBU o alias); **apartar en alcancías sigue SIMULATED** | El MCP permite transferir a terceros, pero las alcancías solo se consultan |
 | D16 | **La URL pública no usa el MCP real.** Lo en vivo se muestra desde el portátil de quien presenta, con un solo movimiento de monto chico | El login es interactivo y con una cuenta real, Belo pide montos chicos y las llamadas desde servidores no conectan |
 | D17 | **La app es una PWA:** instalable en el celular, con `vite-plugin-pwa`. El service worker guarda solo la cáscara de la app; todo `/api` va siempre a la red y, sin conexión, no se puede aprobar nada. Las notificaciones push son opcionales y están en la lista de recortes | La historia ocurre en el celular de Sofía cuando le llega un pago, y la demo se ve mejor en un teléfono. Un plan o un saldo guardado en caché podría mostrar dinero que ya no está |
+| D18 | **Los dólares son USDC:** el ingreso de Sofía llega en `USDC`, el excedente queda rindiendo en `USDT` y el colchón cuenta USDC + USDT (+ alcancías). Los pesos son `ARGt` en Belo y `ARS` en el dominio | Belo no tiene saldo en `USD`: sus dólares son digitales (lectura real del 28-nov). Así el plan de la demo se puede ejecutar de verdad: M1 es USDC → USDT y M3 es USDC → ARGt |
 
 ## Pendientes
 
@@ -33,6 +34,7 @@ Propuestas y recomendaciones en [`ruta-de-trabajo.md`](ruta-de-trabajo.md#decisi
 - [ ] **$belotag de los 5 integrantes**, registrados en Equipos de HackRadar. Para el MCP, además, cuenta con identidad verificada y el correo dado de alta por Belo.
 - [x] **Lista de tools reales** en [`belo-mcp/tools.md`](belo-mcp/tools.md) (18 tools, 27-nov).
 - [ ] **Actualizar `BeloPort`, el MCP simulado y el anexo A1 de `caso-de-prueba.md`** con esos nombres.
+- [ ] **Aplicar D18 en el dominio, los datos y el caso de prueba:** `data/sofia-demo.json` (saldo en USDC), `cushion_scope`, `allowed_currencies`, el motor y el anexo de `caso-de-prueba.md`. El MCP simulado, el adaptador y los ejemplos de la API ya usan USDC.
 - [ ] **Hacer público el repositorio** antes de entregar en HackRadar.
 
 ## Preguntas para los mentores de Belo

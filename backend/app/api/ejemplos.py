@@ -31,10 +31,11 @@ from .esquemas import (
 DATOS = Path(__file__).resolve().parents[3] / "data" / "sofia-demo.json"
 LUNES = datetime(2026, 11, 30, 12, 0, tzinfo=UTC)
 JUEVES = date(2026, 12, 3)
+DOLARES = {"USD": "USDC"}  # D18: hasta que data/ pase a USDC
 PEDIR = DecisionJuez(decision=Decision.PEDIR_APROBACION, motivos=["nivel 3: pide aprobación"])
 
 
-def _m(valor: str, moneda: str = "USD") -> Monto:
+def _m(valor: str, moneda: str = "USDC") -> Monto:
     return Monto(valor=valor, moneda=moneda)
 
 
@@ -52,7 +53,7 @@ def reglas() -> Reglas:
     return Reglas(
         user_id=d["user_id"],
         profile=d["profile"],
-        balances={k: _texto(v) for k, v in d["balances"].items()},
+        balances={DOLARES.get(k, k): _texto(v) for k, v in d["balances"].items()},
         fx_usd_ars=_texto(d["fx_demo"]["USD_ARS"]),
         hard_rules=duras,
         dues=[Vencimiento(**{**v, "amount": _texto(v["amount"])}) for v in d["dues"]],
@@ -117,7 +118,7 @@ def _plan(
         plan_id="plan-ing01",
         creado=LUNES,
         ingreso=_m("1500.00"),
-        titulo="Llegaron USD 1.500. Este es tu plan para este pago:",
+        titulo="Llegaron 1.500 USDC. Este es tu plan para este pago:",
         movimientos=movs,
         resumen=ResumenPlan(
             libre_usd=libre,
