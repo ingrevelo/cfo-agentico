@@ -8,7 +8,7 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from app.api import rutas_ejemplo
+from app.api import rutas_ejemplo, rutas_reales
 
 
 def get_database_url() -> str:
@@ -31,6 +31,7 @@ def create_app() -> FastAPI:
 
     # Contrato C3 con respuestas de ejemplo; api/endpoints-reales lo reemplaza sin cambiar rutas.
     # Va antes de montar el frontend en "/", para que /api no quede tapado por los estáticos.
+    application.include_router(rutas_reales.router)
     application.include_router(rutas_ejemplo.router)
 
     frontend_dist = Path(os.getenv("FRONTEND_DIST", "/app/static"))
