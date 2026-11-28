@@ -44,6 +44,7 @@ El LLM se usa en cuatro lugares, todos de solo lectura: nombrar los patrones que
 |---|---|
 | Base | **React 18 + TypeScript** con **Vite** |
 | Estilos | **Tailwind CSS** |
+| PWA (D17) | **`vite-plugin-pwa`**: manifest, íconos y service worker. Solo la cáscara en caché; `/api` siempre por red (`NetworkOnly`); `sw.js` sin caché para que cada despliegue llegue a los celulares |
 | Cliente de la API | Tipos generados desde el OpenAPI de FastAPI (`openapi-typescript`) y `fetch`, siempre con rutas relativas (`/api/...`) |
 | Datos de prueba | Mientras la API no esté lista, las pantallas leen JSON de ejemplo con la misma forma |
 
@@ -191,6 +192,7 @@ Fuera del repo: deck, video de respaldo, publicaciones de Construye en Público 
 | `front/pantalla-plan` | Pantalla 2: tarjeta del plan con sus 3 movimientos y la explicación | 1 | Brigitte |
 | `front/pantalla-aprobacion` | Pantalla 3: Caso Rojo bloqueado, OK del plan y espera de la aprobación en Belo con los 4 estados | 2 | Cesar |
 | `front/pantalla-resumen-log` | Pantalla 4: resumen, MCP Log y badge SIMULATED | 3 | Cesar |
+| `front/pwa` | PWA (D17): manifest, íconos, service worker sin datos de dinero en caché, pantalla "Sin conexión" que bloquea la aprobación, y prueba de instalación en Android y iPhone | 3 | Cesar |
 | `front/reiniciar-demo` | Botón visible de **Reiniciar demo** y aviso de datos sintéticos | 3 | Juan Carlos |
 | `front/perfilado` | Reglas propuestas que Sofía confirma o descarta | 4 | Cesar |
 | `front/pulido` | Textos, estados de carga, vista en celular y accesibilidad básica | 4 | Brigitte |
@@ -259,7 +261,7 @@ Horas en hora de Colombia. Cada bloque cierra con un **checkpoint** de 10 minuto
 - **Cesar:** `agent/aprobacion-ejecucion`, `api/endpoints-reales`, `front/cliente-api` y `adapter/live-belo`.
 - **Vanessa:** `domain/reconciliacion` y `domain/autonomia`.
 - **Juan Carlos:** `domain/perfilador`.
-- **Julia:** `front/pantalla-resumen-log` y `front/reiniciar-demo`.
+- **Julia:** `front/pantalla-resumen-log`, `front/reiniciar-demo` y `front/pwa`.
 - **Brigitte:** `docs/guion-demo`.
 
 **Checkpoint 19:00:** **la demo completa corre de punta a punta en la URL pública**, incluido Reiniciar demo. 12 de 12 tests pasan o se sabe exactamente cuáles no.
@@ -288,12 +290,13 @@ Horas en hora de Colombia. Cada bloque cierra con un **checkpoint** de 10 minuto
 
 En este orden, de lo primero que se sacrifica a lo último:
 
-1. `adapter/mcp-simulado`: el mock en proceso alcanza para la demo; solo se pierde mostrar el protocolo MCP de punta a punta.
-2. `LiveBeloMCPAdapter` para mover dinero: todo lo que mueve dinero queda en el mock con SIMULATED (en la URL pública es así de todos modos).
-3. `LiveBeloMCPAdapter` para leer: la URL pública corre entera contra el mock.
-4. Perfilado en la interfaz: se muestra como un paso ya confirmado y el test T12 lo respalda.
-5. Autonomía en vivo: queda solo la tarjeta del cierre.
-6. **Nunca se recortan:** la URL pública, el plan del ingreso, el Caso Rojo, la aprobación idempotente y el MCP Log. Son lo que se entrega.
+1. Notificaciones push de la PWA (`front/push`, solo si sobra tiempo): se muestra el aviso "llegó tu pago" dentro de la app.
+2. `adapter/mcp-simulado`: el mock en proceso alcanza para la demo; solo se pierde mostrar el protocolo MCP de punta a punta.
+3. `LiveBeloMCPAdapter` para mover dinero: todo lo que mueve dinero queda en el mock con SIMULATED (en la URL pública es así de todos modos).
+4. `LiveBeloMCPAdapter` para leer: la URL pública corre entera contra el mock.
+5. Perfilado en la interfaz: se muestra como un paso ya confirmado y el test T12 lo respalda.
+6. Autonomía en vivo: queda solo la tarjeta del cierre.
+7. **Nunca se recortan:** la URL pública, el plan del ingreso, el Caso Rojo, la aprobación idempotente y el MCP Log. Son lo que se entrega.
 
 ## 6. Riesgos y qué hacemos
 
