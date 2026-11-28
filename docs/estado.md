@@ -4,14 +4,14 @@ Dónde está cada integrante de Dev IngenierIA. Se lee **antes** de empezar una 
 
 Cada persona (o el agente que trabaja para su área) edita **solo su fila**, en un commit chico y aparte: `docs: actualiza estado de <área>`. Las reglas están en [`../AGENTS.md`](../AGENTS.md).
 
-**Última actualización:** 2026-11-27, al cerrar la especificación y la estructura del repositorio.
+**Última actualización:** 2026-11-28 01:00, fila de Cesar.
 
 | Integrante | Área | Qué está haciendo | Bloqueos | Próximo paso |
 |---|---|---|---|---|
 | **Brigitte Aponte** | Producto, negocio, pitch y agentes | Cerró `README.md`, `docs/arquitectura.md`, `docs/decisiones.md` y `docs/caso-de-prueba.md`. Montando la coordinación de agentes (`AGENTS.md`, `mensajes/`, `docs/estado.md`, `docs/bitacora/`) y el índice de `docs/investigacion/` | Faltan los `$belotag` de los 5 integrantes y hacer público el repositorio antes de entregar en HackRadar | Escribir `docs/investigacion/negocio.md` y `docs/investigacion/pitch.md`, y preparar las preguntas para los mentores de Belo |
 | **Vanessa Yareli Hernández Cázares** | Backend, fullstack y reglas de negocio | Sin empezar. Le toca el primer paso del orden de trabajo: congelar el contrato de `BeloPort` y el `MockBeloAdapter` con `data/sofia-demo.json` | Ninguno | Congelar `BeloPort` y el `MockBeloAdapter`, y avisar en `mensajes/` cuando el contrato esté fijo |
 | **Juan Carlos Pastas Valencia** | Software, IA aplicada, datos y ciberseguridad | Cerró `api/esqueleto` (FastAPI `app.main:app`, `GET /api/salud`, `uv`, `ruff` y `pytest`) para destrabar el despliegue | Para `domain/tests-seguridad`, espera que Vanessa congele `BeloPort` y `MockBeloAdapter` | Ajustar `data/*.json` en `domain/datos-kit` |
-| **Cesar David Revelo Apraez** (`@ingrevelo`) | AI/ML, orquestación, FastAPI y React | Dejó la lista de las 18 tools del MCP de Belo en `docs/belo-mcp/` y alineó la ruta de trabajo con `AGENTS.md` (rama `docs/roles-agents-md`) | Cloudflare responde 403 a nuestro cliente MCP en Python (pregunta 1 a Belo); siguen por votar LangGraph o máquina de estados y el LLM | Preparar el droplet y abrir `api/contrato-ejemplos` (C3) |
+| **Cesar David Revelo Apraez** (`@ingrevelo`) | AI/ML, orquestación, FastAPI y React | URL pública con despliegue automático (cfo.pruebassite.com, PR 3, 22); conexión real al MCP de Belo y `LiveBeloMCPAdapter` (PR 15, 19); MCP simulado con las respuestas reales (PR 5, 17, 19); cliente del LLM (PR 13); contrato C3 y endpoints reales de reglas, perfilado, log, autonomía y reiniciar (PR 6, 14, 25); frontend conectado a la API (PR 27); D18 (dólares en USDC, PR 21) | El plan del ingreso, aprobar y ejecutar esperan el motor, el juez, la máquina de estados y `BeloPort` (Vanessa, sin empezar). Los pares reales de Belo no se pudieron verificar: la cuenta no tiene saldo | Con el dominio: `agent/orquestador-plan` y pasar plan/aprobar/avanzar de ejemplos a reales. Mientras tanto, el MCP simulado en el droplet |
 | **Julia Arizbeth Gómez Gámez** | AI Product Builder y UX | Sin empezar. Las 4 pantallas están descritas en `README.md` y `docs/caso-de-prueba.md` | Espera los endpoints de la API para datos reales; mientras tanto puede trabajar con `data/sofia-demo.json` | Maquetar la pantalla 1 (Reglas) y la 2 (Plan del ingreso) con los datos sintéticos |
 
 ## Cómo se actualiza
