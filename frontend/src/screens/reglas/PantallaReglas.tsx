@@ -1,153 +1,100 @@
+// Pantalla 1: las reglas duras y los vencimientos, editables y explicados.
+// Las reglas viajan por la API: esta pantalla no calcula dinero ni lee ningún JSON.
+import { useState } from 'react';
+import { api } from '../../api';
+import type { Reglas, ReglasDuras } from '../../api/tipos';
+import { AvisoSintetico, Cargando, ErrorAviso, TituloPantalla } from '../../components/avisos';
+import BarraAccion from '../../components/BarraAccion';
 import Figura3D from '../../components/Figura3D';
-import SimulatedBadge from '../../components/SimulatedBadge';
-import type { DatosSofia, ReglasDuras, Vencimiento } from '../../api/cliente';
+import { explicarVencimiento } from '../../formato';
+import { useApp } from '../../state/contexto';
+import { useAccion } from '../../state/useAccion';
+import CampoNumero from './CampoNumero';
+import { CAMPOS, validarRegla } from './campos';
 
-interface Props {
-  datos: DatosSofia;
-  reglas: ReglasDuras;
-  vencimientos: Vencimiento[];
-  onCambiarRegla: (campo: keyof ReglasDuras, valor: number) => void;
-  onCambiarVencimiento: (id: string, monto: number) => void;
-  onConfirmar: () => void;
-}
+export default function PantallaReglas() {
+  const { estado, despachar } = useApp();
+  const guardar = useAccion(api.guardarReglas.bind(api));
+  const [borrador, setBorrador] = useState<Reglas | null>(estado.reglas);
 
-/** Un número editable con su etiqueta y su explicación en lenguaje simple. */
-function CampoNumero(props: {
-  id: string;
-  etiqueta: string;
-  explicacion: string;
-  valor: number;
-  sufijo: string;
-  onChange: (valor: number) => void;
-}) {
-  return (
-    <div className="tarjeta">
-      <label htmlFor={props.id} className="block text-sm font-semibold">
-        {props.etiqueta}
-      </label>
-      <div className="mt-2 flex items-center gap-2">
-        <input
-          id={props.id}
-          type="number"
-          inputMode="decimal"
-          className="campo"
-          value={props.valor}
-          onChange={(e) => props.onChange(Number(e.target.value))}
-        />
-        <span className="text-sm font-medium text-ash">{props.sufijo}</span>
-      </div>
-      <p className="mt-2 text-sm leading-snug text-ash">{props.explicacion}</p>
-    </div>
+  if (!estado.sesion) return <Cargando texto="Entrando a la demo..." />;
+  const reglas = borrador ?? estado.reglas;
+  if (!reglas) return <Cargando texto="Buscando tus reglas..." />;
+
+  const { perfil } = estado.sesion;
+  const errores = CAMPOS.map((c) => validarRegla(c, reglas.hard_rules[c.campo] as number)).filter(
+    (e): e is { campo: keyof ReglasDuras; mensaje: string } => e !== null,
   );
-}
 
-/** Las reglas duras, en el orden en que se cuentan. Cada una con su explicación. */
-const CAMPOS: { campo: keyof ReglasDuras; etiqueta: string; sufijo: string; explicacion: string }[] = [
-  {
-    campo: 'min_cushion_usd',
-    etiqueta: 'Colchón mínimo en dólares',
-    sufijo: 'USD',
-    explicacion: 'Nunca bajes de 500 dólares entre dólares, USDT y alcancías. Es tu red de seguridad.',
-  },
-  {
-    campo: 'max_conversion_usd',
-    etiqueta: 'Tope para cambiar a pesos sin preguntar',
-    sufijo: 'USD',
-    explicacion: 'Si una conversión pasa de este monto, el agente te pregunta antes de hacerla.',
-  },
-  {
-    campo: 'fx_tolerance_pct',
-    etiqueta: 'Cuánto puede empeorar el dólar',
-    sufijo: '%',
-    explicacion: 'Si el dólar se mueve en contra más que esto, la conversión se retiene y te vuelve a preguntar.',
-  },
-  {
-    campo: 'fx_advance_trigger_pct',
-    etiqueta: 'Cuánto tiene que mejorar para adelantar',
-    sufijo: '%',
-    explicacion: 'Si mejora al menos esto antes del vencimiento, el agente propone cambiar antes y gastar menos dólares.',
-  },
-  {
-    campo: 'tax_pct_of_income',
-    etiqueta: 'Cuánto apartar para impuestos',
-    sufijo: '% del ingreso',
-    explicacion: 'De cada ingreso se aparta este porcentaje en tu alcancía, antes de tocar el resto.',
-  },
-  {
-    campo: 'min_liquid_usd',
-    etiqueta: 'Dinero libre para el día a día',
-    sufijo: 'USD',
-    explicacion: 'Esto queda disponible sin tocar, para tus gastos de la semana.',
-  },
-  {
-    campo: 'min_income_trigger_usd',
-    etiqueta: 'Desde qué monto el agente arma un plan',
-    sufijo: 'USD',
-    explicacion: 'Los ingresos más chicos que esto no disparan ningún plan.',
-  },
-];
+  const cambiarRegla = (campo: keyof ReglasDuras, valor: number) =>
+    setBorrador({ ...reglas, hard_rules: { ...reglas.hard_rules, [campo]: valor } });
 
-/** "thursday" se cuenta en castellano; el monotributo vence un día del mes. */
-function explicarVencimiento(v: Vencimiento): string {
-  if (v.due === 'thursday') return 'Vence cada semana, el jueves.';
-  if (v.due) return `Vence cada semana, el ${v.due}.`;
-  return `Vence el día ${v.due_day} de cada mes.`;
-}
+  const cambiarVencimiento = (id: string, amount: number) =>
+    setBorrador({
+      ...reglas,
+      dues: reglas.dues.map((d) => (d.id === id ? { ...d, amount } : d)),
+    });
 
-export default function PantallaReglas({
-  datos,
-  reglas,
-  vencimientos,
-  onCambiarRegla,
-  onCambiarVencimiento,
-  onConfirmar,
-}: Props) {
-  const { profile } = datos;
+  async function confirmar() {
+    if (!reglas) return;
+    const guardadas = await guardar.ejecutar(reglas);
+    if (!guardadas) return;
+    despachar({ tipo: 'reglas', reglas: guardadas });
+    despachar({ tipo: 'anunciar', texto: 'Reglas confirmadas.' });
+    despachar({ tipo: 'ir', vista: 'plan' });
+  }
 
   return (
-    <div className="space-y-4">
-      <header className="flex items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl">Las reglas de {profile.name}</h1>
-          <p className="mt-2 text-sm text-ash">
-            {profile.occupation} en {profile.city}. Cobra en {profile.income_currency}.
-          </p>
-        </div>
-        <Figura3D tamano={112} />
+    <div className="space-y-4 pb-28 md:pb-0">
+      <header className="flex items-start justify-between gap-4">
+        <TituloPantalla sub={`${perfil.occupation} en ${perfil.city}. Cobra en ${perfil.income_currency}.`}>
+          Las reglas de {perfil.name}
+        </TituloPantalla>
+        <Figura3D tamano={96} />
       </header>
 
-      <p className="flex items-center gap-2 text-sm text-ash">
-        <SimulatedBadge /> Datos sintéticos de demostración: no son de ninguna persona real.
-      </p>
+      <AvisoSintetico />
+      {guardar.error && <ErrorAviso mensaje={guardar.error} onReintentar={confirmar} />}
 
-      {CAMPOS.map((c) => (
-        <CampoNumero
-          key={c.campo}
-          id={c.campo}
-          etiqueta={c.etiqueta}
-          explicacion={c.explicacion}
-          sufijo={c.sufijo}
-          valor={reglas[c.campo] as number}
-          onChange={(valor) => onCambiarRegla(c.campo, valor)}
-        />
-      ))}
+      <div className="grid gap-4 md:grid-cols-2">
+        {CAMPOS.map((c) => (
+          <CampoNumero
+            key={c.campo}
+            id={c.campo}
+            etiqueta={c.etiqueta}
+            explicacion={c.explicacion}
+            sufijo={c.sufijo}
+            valor={reglas.hard_rules[c.campo] as number}
+            error={validarRegla(c, reglas.hard_rules[c.campo] as number)?.mensaje}
+            onChange={(valor) => cambiarRegla(c.campo, valor)}
+          />
+        ))}
+      </div>
 
       <h2 className="pt-2 text-xl">Lo que pagás todos los meses</h2>
-      {vencimientos.map((v) => (
-        <CampoNumero
-          key={v.id}
-          id={`vencimiento-${v.id}`}
-          etiqueta={v.label}
-          explicacion={explicarVencimiento(v)}
-          sufijo={v.currency}
-          valor={v.amount}
-          onChange={(monto) => onCambiarVencimiento(v.id, monto)}
-        />
-      ))}
+      <div className="grid gap-4 md:grid-cols-2">
+        {reglas.dues.map((v) => (
+          <CampoNumero
+            key={v.id}
+            id={'vencimiento-' + v.id}
+            etiqueta={v.label}
+            explicacion={explicarVencimiento(v.due, v.due_day)}
+            sufijo={v.currency}
+            valor={v.amount}
+            etiquetaOrigen={v.origen === 'perfilado' ? 'Lo encontró el agente' : undefined}
+            error={v.amount < 0 ? 'Tiene que ser un número entero de 0 o más.' : undefined}
+            onChange={(amount) => cambiarVencimiento(v.id, amount)}
+          />
+        ))}
+      </div>
 
-      <button type="button" className="boton-primario mt-2 w-full" onClick={onConfirmar}>
-        Confirmar reglas
-      </button>
+      <BarraAccion
+        etiqueta="Confirmar reglas"
+        etiquetaCargando="Guardando..."
+        onClick={confirmar}
+        cargando={guardar.cargando}
+        deshabilitado={errores.length > 0}
+      />
     </div>
   );
 }
