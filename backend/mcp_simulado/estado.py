@@ -18,11 +18,14 @@ DATOS = Path(__file__).resolve().parents[2] / "data"
 VENCE_EN = timedelta(minutes=15)
 APROBACIONES = ("auto", "manual", "rechazo")
 FALLOS = ("ninguno", "timeout")
+# En Belo los pesos argentinos se llaman ARGt; los datos de Sofía y el dominio usan ARS.
+PESOS = "ARGt"
+DESDE_DATOS = {"ARS": PESOS}
 
 # Valores sintéticos de la demo (no son reglas de negocio: esas viven en backend/app/domain/).
 RENDIMIENTO_ANUAL = {"USDT": Decimal("0.045")}
 REDES = {
-    "ARS": [{"network": "CVU/CBU/ALIAS", "min": "1000", "max": "5000000", "fee": "0"}],
+    PESOS: [{"network": "CVU/CBU/ALIAS", "min": "1000", "max": "5000000", "fee": "0"}],
     "USDT": [
         {"network": "TRON", "min": "5", "max": "10000", "fee": "1"},
         {"network": "POLYGON", "min": "1", "max": "10000", "fee": "0.5"},
@@ -45,6 +48,13 @@ class ErrorSimulado(Exception):
 
 def ahora() -> datetime:
     return datetime.now(UTC)
+
+
+def validar_moneda(codigo: str) -> str:
+    """Valida el código de moneda como lo pide Belo."""
+    if codigo == "ARS":
+        raise ErrorSimulado(f"Moneda desconocida: ARS. Los pesos argentinos se llaman {PESOS}.")
+    return codigo
 
 
 def dec(valor: object) -> Decimal:
@@ -95,7 +105,9 @@ class Estado:
         sofia = json.loads((DATOS / "sofia-demo.json").read_text(encoding="utf-8"))
         hist = json.loads((DATOS / "historial-sofia.json").read_text(encoding="utf-8"))
         b = sofia["balances"]
-        self.saldos = {m: Decimal(str(b.get(m, 0))) for m in ("USD", "USDT", "ARS")}
+        self.saldos = {
+            DESDE_DATOS.get(m, m): Decimal(str(b.get(m, 0))) for m in ("USD", "USDT", "ARS")
+        }
         self.boveda_impuestos = Decimal(str(b.get("alcancia_impuestos_usd", 0)))
         self.fx_usd_ars = Decimal(str(sofia["fx_demo"]["USD_ARS"]))
         self.aprobacion = "auto"
@@ -106,8 +118,8 @@ class Estado:
     # ------------------------------------------------------------------ lecturas
     def precio(self, par: str) -> Decimal:
         precios = {
-            "USD/ARS": self.fx_usd_ars,
-            "USDT/ARS": self.fx_usd_ars,
+            f"USD/{PESOS}": self.fx_usd_ars,
+            f"USDT/{PESOS}": self.fx_usd_ars,
             "USDT/USD": Decimal("1"),
         }
         if par not in precios:
@@ -128,6 +140,8 @@ class Estado:
     # ------------------------------------------------------------------ cotizar
     def cotizar_swap(self, par: str, monto: str, moneda: str, tipo: str) -> Transaccion:
         base, _, cotizada = par.partition("/")
+        for codigo in (base, cotizada, moneda):
+            validar_moneda(codigo)
         p, q = self.precio(par), dec(monto)
         if moneda == base:
             monto_base, monto_cot = q, q * p
@@ -148,12 +162,15 @@ class Estado:
     def cotizar_transferencia(
         self, direccion: str, tipo_dir: str, moneda: str, monto: str
     ) -> Transaccion:
+        validar_moneda(moneda)
         q = dec(monto)
         if tipo_dir in INTERNAS:
             comision = Decimal("0")
         elif tipo_dir in BANCARIAS:
-            if moneda != "ARS":
-                raise ErrorSimulado("Los retiros a banco solo existen para pesos argentinos (ARS)")
+            if moneda != PESOS:
+                raise ErrorSimulado(
+                    f"Los retiros a banco solo existen para pesos argentinos ({PESOS})"
+                )
             comision = Decimal("0")
         elif moneda == "USDT":
             redes = {r["network"]: Decimal(r["fee"]) for r in REDES["USDT"]}
@@ -257,7 +274,7 @@ class Estado:
         return {
             "id": m["id"],
             "type": TIPOS_HISTORIAL.get(m["tipo"], "transfer"),
-            "currency": m["moneda"],
+            "currency": DESDE_DATOS.get(m["moneda"], m["moneda"]),
             "amount": texto(Decimal(str(m["monto"]))),
             "createdAt": f"{m['fecha']}T12:00:00+00:00",
             "metadata": {"tipoOriginal": m["tipo"], "description": m["descripcion"]},
