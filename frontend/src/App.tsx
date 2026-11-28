@@ -1,81 +1,53 @@
+// El armazón: columna flex de alto mínimo 100dvh, con el pie SIEMPRE en el flujo
+// normal (nunca fixed), así nunca se corta ni tapa el contenido.
 import { useState } from 'react';
-import { obtenerSofia, type ReglasDuras, type Vencimiento } from './api/cliente';
-import PantallaReglas from './screens/reglas/PantallaReglas';
-import PantallaPlan from './screens/plan/PantallaPlan';
-import PantallaAprobacion from './screens/aprobacion/PantallaAprobacion';
-import PantallaResumen from './screens/resumen/PantallaResumen';
+import GaleriaBuho from './components/buho/GaleriaBuho';
+import BarraSuperior from './components/BarraSuperior';
+import HojaAjustes from './components/ajustes/HojaAjustes';
+import Asistente from './screens/Asistente';
+import Home from './screens/Home';
+import Modo from './screens/Modo';
+import { ProveedorApp, useApp } from './state/contexto';
 
-type Pantalla = 'reglas' | 'plan' | 'aprobacion' | 'resumen';
-
-const PASOS: { id: Pantalla; nombre: string }[] = [
-  { id: 'reglas', nombre: 'Reglas' },
-  { id: 'plan', nombre: 'Plan' },
-  { id: 'aprobacion', nombre: 'Aprobación' },
-  { id: 'resumen', nombre: 'Resumen' },
-];
-
-export default function App() {
-  const datos = obtenerSofia();
-
-  // Navegación entre las 4 pantallas, sin router: una sola variable de estado.
-  const [pantalla, setPantalla] = useState<Pantalla>('reglas');
-
-  // Las reglas editadas viven acá, así la pantalla del plan usa lo que Sofía confirmó.
-  const [reglas, setReglas] = useState<ReglasDuras>(datos.hard_rules);
-  const [vencimientos, setVencimientos] = useState<Vencimiento[]>(datos.dues);
-
-  const cambiarRegla = (campo: keyof ReglasDuras, valor: number) =>
-    setReglas((previas) => ({ ...previas, [campo]: valor }));
-
-  const cambiarVencimiento = (id: string, monto: number) =>
-    setVencimientos((previos) => previos.map((v) => (v.id === id ? { ...v, amount: monto } : v)));
+function Contenido() {
+  const { estado } = useApp();
+  const [ajustes, setAjustes] = useState(false);
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-md px-4 pb-10 pt-6">
-      <nav aria-label="Pasos de la demo" className="mb-6 flex flex-wrap gap-1">
-        {PASOS.map((paso) => (
-          <button
-            key={paso.id}
-            type="button"
-            aria-current={pantalla === paso.id ? 'step' : undefined}
-            onClick={() => setPantalla(paso.id)}
-            className={
-              pantalla === paso.id
-                ? 'h-10 rounded-full bg-ink px-4 text-sm font-semibold text-white'
-                : 'boton-texto'
-            }
-          >
-            {paso.nombre}
-          </button>
-        ))}
-      </nav>
+    <div
+      className="mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col px-4"
+      style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
+    >
+      <p aria-live="polite" className="sr-only">
+        {estado.anuncio}
+      </p>
 
-      <main>
-        {pantalla === 'reglas' && (
-          <PantallaReglas
-            datos={datos}
-            reglas={reglas}
-            vencimientos={vencimientos}
-            onCambiarRegla={cambiarRegla}
-            onCambiarVencimiento={cambiarVencimiento}
-            onConfirmar={() => setPantalla('plan')}
-          />
-        )}
-        {pantalla === 'plan' && (
-          <PantallaPlan
-            datos={datos}
-            reglas={reglas}
-            vencimientos={vencimientos}
-            onAprobar={() => setPantalla('aprobacion')}
-          />
-        )}
-        {pantalla === 'aprobacion' && <PantallaAprobacion />}
-        {pantalla === 'resumen' && <PantallaResumen />}
+      {estado.vista === 'asistente' && <BarraSuperior onAjustes={() => setAjustes(true)} />}
+
+      <main className="flex flex-1 flex-col">
+        {estado.vista === 'home' && <Home />}
+        {estado.vista === 'modo' && <Modo />}
+        {estado.vista === 'asistente' && <Asistente />}
       </main>
 
-      <footer className="mt-10 text-xs leading-relaxed text-ash">
-        CFO Agéntico · Dev IngenierIA · {datos._nota}
-      </footer>
+      <footer className="pt-8 text-sm text-tinta-suave">Demo con datos sintéticos.</footer>
+
+      {estado.vista === 'asistente' && (
+        <HojaAjustes abierta={ajustes} onCerrar={() => setAjustes(false)} />
+      )}
     </div>
+  );
+}
+
+export default function App() {
+  // Galería de chequeo del búho: ?galeria-buho en la URL.
+  if (typeof window !== 'undefined' && window.location.search.includes('galeria-buho')) {
+    return <GaleriaBuho />;
+  }
+
+  return (
+    <ProveedorApp>
+      <Contenido />
+    </ProveedorApp>
   );
 }

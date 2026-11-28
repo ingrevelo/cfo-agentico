@@ -3,61 +3,78 @@
 @tailwind utilities;
 
 @layer base {
-  body {
-    @apply bg-fog text-ink font-sans antialiased;
+  /* El pie tiene que poder leerse siempre: nada de overflow-hidden acá. */
+  html,
+  body,
+  #root {
+    height: 100%;
+    overflow: visible;
   }
 
-  /* Títulos tipo Belo: bien apretados y pesados. */
+  body {
+    @apply bg-fondo text-tinta font-sans antialiased;
+  }
+
   h1,
-  h2 {
+  h2,
+  h3 {
     font-weight: 700;
     letter-spacing: -0.04em;
-    line-height: 1;
+    line-height: 1.05;
   }
 
-  /* El foco siempre se ve: se navega con teclado. */
+  /* El foco siempre se ve, en violeta de Belo. */
   :focus-visible {
-    outline: 2px solid #5300da;
+    outline: 3px solid #5300da;
     outline-offset: 2px;
   }
 }
 
 @layer components {
-  /* Única acción primaria de cada pantalla: pastilla negra. */
+  /* UN solo botón primario en toda la app: pastilla violeta de 56 px. */
   .boton-primario {
-    @apply inline-flex h-10 items-center justify-center rounded-full bg-ink px-6 text-sm font-semibold text-white transition-opacity hover:opacity-80 disabled:opacity-40;
+    @apply inline-flex h-14 w-full items-center justify-center gap-2 rounded-full bg-violeta px-8 text-[17px] font-semibold text-white transition-colors;
+    @apply hover:bg-violeta-hover disabled:cursor-not-allowed disabled:opacity-50;
   }
 
-  .boton-texto {
-    @apply inline-flex h-10 items-center rounded-full px-4 text-sm font-medium text-ash hover:text-ink;
+  /* Secundario: botón de texto, sin relleno. */
+  .boton-secundario {
+    @apply inline-flex h-12 items-center justify-center gap-2 rounded-full px-4 text-base font-semibold text-violeta transition-colors;
+    @apply hover:bg-violeta-suave disabled:cursor-not-allowed disabled:opacity-50;
   }
 
+  /* Un solo estilo de tarjeta en toda la app. */
   .tarjeta {
-    @apply rounded-3xl bg-card p-5;
+    @apply rounded-3xl border border-violeta-suave bg-tarjeta p-4;
   }
 
   .campo {
-    @apply h-12 w-full rounded-2xl border border-black/10 bg-card px-4 text-base font-medium text-ink;
+    @apply h-12 w-full rounded-2xl border border-violeta-claro bg-tarjeta px-4 text-base text-tinta;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full bg-violeta-suave px-3 py-1 text-sm font-medium text-tinta;
   }
 }
 
-/* La figura flota despacio; si pedís menos movimiento, queda quieta. */
-@keyframes flotar {
-  0%,
-  100% {
-    transform: translateY(0) rotate(-4deg);
+/* Entrada de cada mensaje del búho. */
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
   }
-  50% {
-    transform: translateY(-10px) rotate(4deg);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.figura-flota {
-  animation: flotar 9s ease-in-out infinite;
+.aparece {
+  animation: aparecer 200ms ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .figura-flota {
+  .aparece {
     animation: none;
   }
 }
