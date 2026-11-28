@@ -37,7 +37,10 @@ async def llamar(s: ClientSession, tool: str, **args) -> tuple[bool, dict | str]
 
 
 async def main() -> None:
-    async with streamable_http_client(URL) as (lectura, escritura), ClientSession(lectura, escritura) as s:
+    async with (
+        streamable_http_client(URL) as (lectura, escritura),
+        ClientSession(lectura, escritura) as s,
+    ):
         await s.initialize()
         nombres = {t.name for t in (await s.list_tools()).tools}
         print(f"{len(nombres)} tools en {URL}")
@@ -46,48 +49,96 @@ async def main() -> None:
         print("\nLecturas")
         ok, b = await llamar(s, "belo_get_balances")
         usd = next(x for x in b["balances"] if x["currency"] == "USD")
-        revisar(ok and b["simulado"] and usd["available"] == "1500.00", "saldo inicial USD 1500.00, marcado como simulado")
+        revisar(
+            ok and b["simulado"] and usd["available"] == "1500.00",
+            "saldo inicial USD 1500.00, marcado como simulado",
+        )
         ok, t = await llamar(s, "belo_list_transactions", limit=5)
-        revisar(ok and t["total"] == 43 and len(t["transactions"]) == 5, "historial de 43 movimientos, paginado")
+        revisar(
+            ok and t["total"] == 43 and len(t["transactions"]) == 5,
+            "historial de 43 movimientos, paginado",
+        )
         ok, t = await llamar(s, "belo_list_transactions", type="deposit", **{"from": "2026-11-01"})
-        revisar(ok and all(m["type"] == "deposit" for m in t["transactions"]), "filtros type y from")
+        revisar(
+            ok and all(m["type"] == "deposit" for m in t["transactions"]), "filtros type y from"
+        )
         ok, v = await llamar(s, "belo_list_vaults")
         revisar(ok and v["vaults"][0]["name"] == "Impuestos", "bóveda Impuestos")
 
         print("\nPlan: USD 900 → USDT (aprobación automática)")
-        ok, q = await llamar(s, "belo_preview_swap", pairCode="USDT/USD", quoteAmount="900", quoteCurrency="USD", type="BUY")
+        ok, q = await llamar(
+            s,
+            "belo_preview_swap",
+            pairCode="USDT/USD",
+            quoteAmount="900",
+            quoteCurrency="USD",
+            type="BUY",
+        )
         revisar(ok and q["status"] == "quoted", "cotización creada, sin debitar")
         ok, c = await llamar(s, "belo_confirm_swap", transactionId=q["id"])
         revisar(ok and c["status"] == "success", "confirmada y aprobada")
         ok, c2 = await llamar(s, "belo_confirm_swap", transactionId=q["id"])
-        revisar(ok and c2["status"] == "success", "confirmar dos veces no repite el movimiento (T06)")
+        revisar(
+            ok and c2["status"] == "success", "confirmar dos veces no repite el movimiento (T06)"
+        )
         ok, b = await llamar(s, "belo_get_balances")
         saldos = {x["currency"]: x["available"] for x in b["balances"]}
-        revisar(saldos["USD"] == "600.00" and saldos["USDT"] == "900.00", "USD 600.00 y USDT 900.00")
+        revisar(
+            saldos["USD"] == "600.00" and saldos["USDT"] == "900.00", "USD 600.00 y USDT 900.00"
+        )
 
         print("\nAlquiler: transferencia ARS a alias con aprobación manual")
         await llamar(s, "simulado_configurar", aprobacion="manual")
-        ok, q = await llamar(s, "belo_preview_swap", pairCode="USD/ARS", quoteAmount="450000", quoteCurrency="ARS", type="SELL")
+        ok, q = await llamar(
+            s,
+            "belo_preview_swap",
+            pairCode="USD/ARS",
+            quoteAmount="450000",
+            quoteCurrency="ARS",
+            type="SELL",
+        )
         await llamar(s, "belo_confirm_swap", transactionId=q["id"])
         ok, c = await llamar(s, "belo_get_transaction", transactionId=q["id"])
         revisar(ok and c["status"] == "awaiting_approval", "queda en awaiting_approval")
         ok, c = await llamar(s, "simulado_aprobar", transactionId=q["id"])
         revisar(ok and c["status"] == "success", "la persona aprueba en Belo (simulado)")
-        ok, q = await llamar(s, "belo_preview_transfer", address="sofia.alquiler.demo", addressType="ALIAS",
-                             currency="ARS", quoteAmount="450000")
+        ok, q = await llamar(
+            s,
+            "belo_preview_transfer",
+            address="sofia.alquiler.demo",
+            addressType="ALIAS",
+            currency="ARS",
+            quoteAmount="450000",
+        )
         await llamar(s, "belo_confirm_transfer", transactionId=q["id"])
         ok, c = await llamar(s, "simulado_aprobar", transactionId=q["id"], aprobar=False)
         revisar(ok and c["status"] == "failed", "rechazo: queda en failed y no mueve nada")
 
         print("\nFallos")
-        ok, e = await llamar(s, "belo_preview_transfer", address="x", addressType="CBU", currency="USD", quoteAmount="10")
+        ok, e = await llamar(
+            s,
+            "belo_preview_transfer",
+            address="x",
+            addressType="CBU",
+            currency="USD",
+            quoteAmount="10",
+        )
         revisar(not ok and "pesos argentinos" in e, "banco solo para ARS")
         await llamar(s, "simulado_configurar", aprobacion="auto", fallo="timeout")
-        ok, q = await llamar(s, "belo_preview_swap", pairCode="USDT/USD", quoteAmount="10", quoteCurrency="USD", type="BUY")
+        ok, q = await llamar(
+            s,
+            "belo_preview_swap",
+            pairCode="USDT/USD",
+            quoteAmount="10",
+            quoteCurrency="USD",
+            type="BUY",
+        )
         ok, e = await llamar(s, "belo_confirm_swap", transactionId=q["id"])
         revisar(not ok and "Tiempo de espera" in e, "timeout simulado en la confirmación")
         ok, c = await llamar(s, "belo_get_transaction", transactionId=q["id"])
-        revisar(ok and c["status"] == "success", "la reconciliación encuentra el movimiento hecho (T05)")
+        revisar(
+            ok and c["status"] == "success", "la reconciliación encuentra el movimiento hecho (T05)"
+        )
         ok, cfg = await llamar(s, "simulado_configurar", fx_usd_ars="1150", fallo="ninguno")
         revisar(ok and cfg["fx_usd_ars"] == "1150", "cotización USD/ARS cambiada a 1150 (T09)")
         await llamar(s, "simulado_reiniciar")

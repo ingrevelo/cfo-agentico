@@ -56,7 +56,9 @@ def cambiar_reglas(cambio: CambioReglas) -> Reglas:
     return actuales.model_copy(update=cambios)
 
 
-@router.post("/ingresos/simular", response_model=Plan, status_code=201, summary="Demo: llega un pago")
+@router.post(
+    "/ingresos/simular", response_model=Plan, status_code=201, summary="Demo: llega un pago"
+)
 def simular_ingreso(datos: SimularIngreso) -> Plan:
     _decimal(datos.monto_usd)
     return ejemplos.plan_propuesto()
@@ -68,7 +70,11 @@ def leer_plan(plan_id: str) -> Plan:
     return ejemplos.plan_propuesto()
 
 
-@router.patch("/planes/{plan_id}/movimientos/{paso}", response_model=Plan, summary="Editar un movimiento (pasa por el juez)")
+@router.patch(
+    "/planes/{plan_id}/movimientos/{paso}",
+    response_model=Plan,
+    summary="Editar un movimiento (pasa por el juez)",
+)
 def editar_movimiento(plan_id: str, paso: str, datos: EditarMovimiento) -> Plan:
     _plan_existe(plan_id)
     if paso not in PASOS:
@@ -78,22 +84,34 @@ def editar_movimiento(plan_id: str, paso: str, datos: EditarMovimiento) -> Plan:
     return ejemplos.plan_propuesto()
 
 
-@router.post("/planes/{plan_id}/aprobar", response_model=Plan, summary="Pantalla 3: OK del plan (idempotente)")
+@router.post(
+    "/planes/{plan_id}/aprobar",
+    response_model=Plan,
+    summary="Pantalla 3: OK del plan (idempotente)",
+)
 def aprobar_plan(plan_id: str) -> Plan:
     _plan_existe(plan_id)
     return ejemplos.plan_aprobado()
 
 
-@router.post("/perfilado", response_model=list[PropuestaRegla], summary="Modo sombra: reglas propuestas")
+@router.post(
+    "/perfilado", response_model=list[PropuestaRegla], summary="Modo sombra: reglas propuestas"
+)
 def perfilar() -> list[PropuestaRegla]:
     return ejemplos.propuestas()
 
 
-@router.post("/perfilado/{propuesta_id}/confirmar", response_model=PropuestaRegla, summary="Confirmar o descartar")
+@router.post(
+    "/perfilado/{propuesta_id}/confirmar",
+    response_model=PropuestaRegla,
+    summary="Confirmar o descartar",
+)
 def confirmar_propuesta(propuesta_id: str, datos: ConfirmarPropuesta) -> PropuestaRegla:
     for p in ejemplos.propuestas():
         if p.id == propuesta_id:
-            return p.model_copy(update={"estado": "confirmada" if datos.confirmar else "descartada"})
+            return p.model_copy(
+                update={"estado": "confirmada" if datos.confirmar else "descartada"}
+            )
     raise HTTPException(404, f"No existe la propuesta {propuesta_id}")
 
 
@@ -107,7 +125,9 @@ def leer_autonomia() -> Autonomia:
     return ejemplos.autonomia()
 
 
-@router.post("/autonomia/{categoria}", response_model=Autonomia, summary="Aceptar o rechazar más autonomía")
+@router.post(
+    "/autonomia/{categoria}", response_model=Autonomia, summary="Aceptar o rechazar más autonomía"
+)
 def responder_autonomia(categoria: str, datos: ResponderAutonomia) -> Autonomia:
     actual = ejemplos.autonomia()
     if categoria not in actual.niveles:

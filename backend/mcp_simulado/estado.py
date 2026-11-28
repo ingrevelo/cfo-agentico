@@ -115,7 +115,9 @@ class Estado:
         return precios[par]
 
     def movimientos(self) -> list[dict]:
-        hechas = [self._a_movimiento(t) for t in self.transacciones.values() if t.estado == "success"]
+        hechas = [
+            self._a_movimiento(t) for t in self.transacciones.values() if t.estado == "success"
+        ]
         return sorted(self.historial + hechas, key=lambda m: m["createdAt"], reverse=True)
 
     def buscar(self, transaction_id: str) -> Transaccion:
@@ -139,9 +141,13 @@ class Estado:
             debitos, creditos = {base: monto_base}, {cotizada: monto_cot}
         else:
             raise ErrorSimulado("type debe ser BUY o SELL")
-        return self._nueva("swap", debitos, creditos, Decimal("0"), {"pairCode": par, "price": str(p)})
+        return self._nueva(
+            "swap", debitos, creditos, Decimal("0"), {"pairCode": par, "price": str(p)}
+        )
 
-    def cotizar_transferencia(self, direccion: str, tipo_dir: str, moneda: str, monto: str) -> Transaccion:
+    def cotizar_transferencia(
+        self, direccion: str, tipo_dir: str, moneda: str, monto: str
+    ) -> Transaccion:
         q = dec(monto)
         if tipo_dir in INTERNAS:
             comision = Decimal("0")
@@ -156,7 +162,12 @@ class Estado:
             comision = redes[tipo_dir]
         else:
             raise ErrorSimulado(f"Tipo de dirección no disponible: {tipo_dir}")
-        detalle = {"address": direccion, "addressType": tipo_dir, "amount": texto(q), "currency": moneda}
+        detalle = {
+            "address": direccion,
+            "addressType": tipo_dir,
+            "amount": texto(q),
+            "currency": moneda,
+        }
         return self._nueva("transfer", {moneda: q + comision}, {}, comision, detalle)
 
     # ------------------------------------------------------------------ confirmar y aprobar
@@ -175,7 +186,9 @@ class Estado:
         elif self.aprobacion == "rechazo":
             self.resolver(t.id, aprobar=False)
         if self.fallo == "timeout":
-            raise ErrorSimulado("Tiempo de espera agotado (simulado). Consulta belo_get_transaction.")
+            raise ErrorSimulado(
+                "Tiempo de espera agotado (simulado). Consulta belo_get_transaction."
+            )
         return t
 
     def resolver(self, transaction_id: str, aprobar: bool) -> Transaccion:
@@ -199,22 +212,45 @@ class Estado:
     def ingreso(self, monto: str, contraparte: str) -> dict:
         q = dec(monto)
         self.saldos["USD"] += q
-        mov = {"id": f"dep-{uuid.uuid4().hex[:8]}", "type": "deposit", "currency": "USD", "amount": texto(q),
-               "createdAt": ahora().isoformat(), "receipt": {"counterparty": contraparte}}
+        mov = {
+            "id": f"dep-{uuid.uuid4().hex[:8]}",
+            "type": "deposit",
+            "currency": "USD",
+            "amount": texto(q),
+            "createdAt": ahora().isoformat(),
+            "receipt": {"counterparty": contraparte},
+        }
         self.historial.append(mov)
         return mov
 
     # ------------------------------------------------------------------ internos
-    def _nueva(self, tipo: str, debitos: dict, creditos: dict, comision: Decimal, detalle: dict) -> Transaccion:
-        t = Transaccion(str(uuid.uuid4()), tipo, "quoted", ahora(), ahora() + VENCE_EN,
-                        debitos, creditos, comision, detalle)
+    def _nueva(
+        self, tipo: str, debitos: dict, creditos: dict, comision: Decimal, detalle: dict
+    ) -> Transaccion:
+        t = Transaccion(
+            str(uuid.uuid4()),
+            tipo,
+            "quoted",
+            ahora(),
+            ahora() + VENCE_EN,
+            debitos,
+            creditos,
+            comision,
+            detalle,
+        )
         self.transacciones[t.id] = t
         return t
 
     def _a_movimiento(self, t: Transaccion) -> dict:
         moneda, monto = next(iter(t.debitos.items()))
-        return {"id": t.id, "type": t.tipo, "currency": moneda, "amount": texto(monto),
-                "createdAt": t.creada.isoformat(), "receipt": t.vista()}
+        return {
+            "id": t.id,
+            "type": t.tipo,
+            "currency": moneda,
+            "amount": texto(monto),
+            "createdAt": t.creada.isoformat(),
+            "receipt": t.vista(),
+        }
 
     @staticmethod
     def _desde_historial(m: dict) -> dict:
