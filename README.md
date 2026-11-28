@@ -27,7 +27,7 @@ Primero aprende de los movimientos de la persona y le propone reglas. Después, 
 | **Aprende de tus movimientos** | En modo sombra, un perfilador (código) detecta lo que se repite en el historial: obligaciones, ingresos, retiros. El LLM lo interpreta ("esto es tu alquiler") y lo propone como regla. Nada se aplica sin confirmación. |
 | **La IA propone y explica** | El LLM interpreta reglas dichas en lenguaje natural, redacta el plan y explica qué, por qué y con cuánto dinero. No calcula montos ni mueve fondos. |
 | **El código frena** | Colchón, topes, tolerancia de FX e idempotencia viven en código. Si alguien intenta una excepción, el motor la bloquea aunque el modelo "quiera" autorizarla. |
-| **La persona aprueba** | Ningún movimiento sale sin un OK explícito, con la aprobación nativa de Belo (`transaction.approve`). |
+| **La persona aprueba** | Ningún movimiento sale sin un OK explícito: aprueba el plan en CFO Agéntico y cada movimiento real en el link de Belo, con el código que le llega por correo. |
 | **La autonomía se gana** | Cada tipo de movimiento empieza pidiendo permiso. Con evidencia, el agente pide hacer solo lo rutinario; con un reverso, pierde ese permiso. |
 | **Transparencia total** | Cada paso queda en un MCP Log con la tool, el ID y el estado. Lo que no corre en vivo lleva el badge **SIMULATED**. |
 
@@ -67,20 +67,20 @@ El ejemplo usa dólares y pesos argentinos, pero el flujo es genérico: cada obl
 
 Detalle completo en [`docs/arquitectura.md`](docs/arquitectura.md).
 
-### Tools del MCP V1 de Belo
+### Qué usamos del MCP de Belo
 
-| Tool | Uso | En vivo o simulado |
+El MCP está en `https://b2b.belo.app/mcp` (HTTP con OAuth). Cada operación que mueve dinero se aprueba en un link de Belo con un código que llega por correo.
+
+| Capacidad del MCP | Uso en CFO Agéntico | En vivo o simulado |
 |---|---|---|
-| `auth.sign_in` | Sesión con el $belotag del equipo | En vivo |
-| `account.balances` | Saldos y verificación del colchón | En vivo |
-| `account.yields` | Rendimiento disponible en USDT | En vivo |
-| `account.activity` | Detectar ingresos, evitar duplicados y reconciliar | En vivo |
-| `exchange.fx` | Cotización al proponer, cada hora y al ejecutar | En vivo |
-| `ramp.fiat_crypto` | Ejecutar USD→USDT y USD→ARS | En vivo, si la V1 lo permite para el par |
-| `transaction.approve` | El OK de la persona | En vivo |
-| Alcancías y pago de servicios | Apartar impuestos y pagar el alquiler | **SIMULATED** (no están en la V1) |
+| Consultar saldos | Verificar el colchón y armar el plan | En vivo desde el portátil; mock en la URL pública |
+| Consultar movimientos | Detectar ingresos, perfilar el historial y reconciliar | En vivo desde el portátil; mock en la URL pública |
+| Convertir monedas | USD→USDT y USD→ARS | Un movimiento real de monto chico en la demo; el resto, mock |
+| Transferir a CBU, CVU o alias | Pagar el alquiler | Mock en la demo (posible en vivo) |
+| Link de aprobación con código | El OK final de cada movimiento | Belo, en vivo |
+| Alcancías | Apartar impuestos | **SIMULATED** (el MCP solo permite consultarlas) |
 
-Los parámetros exactos de cada tool se confirman con el kit del kickoff.
+Los nombres exactos de las tools y sus parámetros se documentan en `docs/belo-mcp/` cuando los obtengamos. Detalle en [`docs/ruta-de-trabajo.md`](docs/ruta-de-trabajo.md#el-mcp-de-belo).
 
 ## Stack
 

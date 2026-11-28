@@ -8,7 +8,7 @@ Orquestación del agente. Decisión pendiente del equipo: **LangGraph** (5–6 n
 | `fetch_belo` | Saldos, rendimientos, movimientos y FX vía BeloPort | No |
 | `rules_engine` | Calcula el plan y corre el juez | No |
 | `compose_plan` | Redacta la tarjeta y el "por qué" a partir de la salida del motor | Sí |
-| `human_approval` | `interrupt()` → `transaction.approve` | No |
+| `human_approval` | OK del plan en la app y, por cada movimiento real, el link de aprobación de Belo (código por correo, vence a los 15 minutos) | No |
 | `execute_and_audit` | Ejecuta lo aprobado, aplica estados e idempotencia, escribe el MCP Log | No |
 | `profile_patterns` (tarea aparte, en modo sombra) | Corre el perfilador sobre `account.activity` y pide al LLM que nombre los patrones y redacte las reglas propuestas | Solo para nombrar y redactar |
 

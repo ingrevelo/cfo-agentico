@@ -20,8 +20,8 @@ Qué tecnologías usamos, quién hace qué, en qué rama y en qué orden, desde 
 | Base de datos | **SQLite** con **SQLModel** | Cero infraestructura (D9); SQLModel reutiliza los modelos de Pydantic |
 | Dinero | **`Decimal`**, nunca `float` | Evita errores de redondeo en montos y cotizaciones |
 | Orquestación del agente | **Propuesta: máquina de estados en Python puro** | Ver "Decisiones a votar" |
-| Cliente MCP | **SDK oficial `mcp` para Python** | Para `LiveBeloMCPAdapter`; el transporte (HTTP o stdio) se confirma con el kit |
-| MCP simulado | **Servidor MCP propio con FastMCP** (del mismo SDK `mcp`), en `backend/mcp_simulado/` | Mientras no haya acceso al MCP de Belo, expone las mismas 8 tools con sus nombres y responde con los datos del mock. Ver "Sin acceso al MCP de Belo" |
+| Cliente MCP | **SDK oficial `mcp` para Python**, HTTP con OAuth | Para `LiveBeloMCPAdapter` contra `https://b2b.belo.app/mcp`. Hoy Cloudflare lo bloquea con 403; ver "El MCP de Belo" |
+| MCP simulado | **Servidor MCP propio con FastMCP** (del mismo SDK `mcp`), en `backend/mcp_simulado/` | Imita las tools reales de Belo con los datos del mock. Lo usa la URL pública. Ver "El MCP de Belo" |
 | Tests | **pytest** | Los 12 casos de seguridad corren contra el mock |
 | Calidad | **ruff** (lint y formato) | Un solo comando, sin discusiones de estilo |
 
@@ -61,27 +61,48 @@ El LLM se usa en cuatro lugares, todos de solo lectura: nombrar los patrones que
 | Datos | SQLite dentro del contenedor, sembrado al arrancar con `data/sofia-demo.json` e `historial-sofia.json` | Cada despliegue empieza con la Sofía de la demo |
 | Varios visitantes | Botón **Reiniciar demo** (`POST /api/demo/reiniciar`) visible en la app | Los jurados comparten la misma instancia; cualquiera puede volver al estado inicial |
 | Salud | `GET /api/salud` como healthcheck de Docker Compose y como último paso del workflow | Si la versión nueva no responde, el workflow falla y se vuelve a la imagen anterior |
-| Secretos | Un `.env` en el droplet, fuera del repo y con permisos `600`, con `ANTHROPIC_API_KEY`, `BELO_MCP_URL` y `BELO_BELOTAG`. En GitHub Secrets solo van `DO_HOST`, `DO_USER` y `DO_SSH_KEY` | Nunca en el repo ([`CONTRIBUTING.md`](../CONTRIBUTING.md), regla 5) |
+| Secretos | Un `.env` en el droplet, fuera del repo y con permisos `600`, con `ANTHROPIC_API_KEY` y `BELO_MCP_URL` (que en el droplet apunta al MCP simulado). En GitHub Secrets solo van `DO_HOST`, `DO_USER` y `DO_SSH_KEY` | Nunca en el repo ([`CONTRIBUTING.md`](../CONTRIBUTING.md), regla 5) |
 | Seguridad del enlace público | En la URL pública, **todo lo que mueve dinero corre contra el mock** (SIMULATED). Solo las tools de lectura pueden ir en vivo, y solo si Belo confirma que es seguro | Un enlace abierto no puede aprobar movimientos reales con la cuenta del equipo |
 | Seguridad del servidor | Usuario `deploy` sin privilegios de root (solo Docker), una llave SSH exclusiva para GitHub Actions y firewall abierto solo en 22, 80 y 443. Límite de memoria y `restart: unless-stopped` en Compose | El droplet es nuestro: la llave del workflow solo sirve para desplegar |
 | Respaldo | La demo también corre en local con un comando, y hay un video grabado el sábado | Si el servidor falla durante el pitch |
 
-### Sin acceso al MCP de Belo
+### El MCP de Belo
 
-Todavía no tenemos acceso al MCP de Belo. No es un bloqueo: todo acceso a Belo pasa por `BeloPort`, así que el dominio, el agente, la API y el frontend no saben qué hay del otro lado. Trabajamos en tres capas:
+Belo publicó el MCP el 27 de noviembre ([guía de conexión](https://app.notion.com/p/belo/belo-para-agentes-c-mo-conectar-el-MCP-hackathon-27-11-424b23cb6b46819cb3b9edbc2057bb49)). Lo que sabemos:
+
+| Tema | Qué dice Belo | Qué significa para nosotros |
+|---|---|---|
+| Conexión | `https://b2b.belo.app/mcp`, HTTP, OAuth con registro dinámico (sin client ID ni secreto) | El login es interactivo, con la cuenta de Belo de una persona del equipo (Google o código por correo). Requiere identidad verificada y el correo dado de alta para la hackathon |
+| Permisos | En el login se elige "Consultar" (marcado) y "Operar" (desmarcado: transferir, convertir y retirar por pix) | Para mover dinero hay que marcar "Operar". Para leer basta "Consultar" |
+| Consultas | Saldos, direcciones de depósito, movimientos, contactos y alcancías | Saldos y movimientos alimentan el plan y el perfilador |
+| Operaciones | Transferir a otra cuenta de Belo (belotag o correo), a CVU, CBU o alias, o a una dirección cripto; convertir monedas; retirar por pix | **Hay transferencias a terceros**: el alquiler se puede pagar de verdad. **No hay operación para mover a alcancías**: apartar impuestos sigue SIMULATED |
+| Aprobación | Dos pasos: el agente pide una cotización y entrega un link de Belo; la persona ve destino, monto y comisión y confirma con un código que llega por correo. El agente se entera solo | La aprobación final de cada movimiento real es de Belo, no de nuestra app (D13). EJECUTANDO significa "esperando la aprobación en Belo" |
+| Vencimientos | El link vence a los 15 minutos y la cotización se actualiza sola; al desconectar, el acceso vence en 15 minutos | Si el link vence, se pide otra cotización y el juez vuelve a revisar la banda de FX (RETENIDO) |
+| Límites | "Montos chicos"; tope de pedidos de código; 429 si hay mucha gente en la misma red | En vivo se mueve **un solo movimiento de monto chico** |
+| Desde servidores | ChatGPT web y Grok no conectan porque "llaman desde sus servidores" | La URL pública no usa el MCP real (D16) |
+| Nombres de las tools | La guía no los lista | Se obtienen con `backend/scripts/listar_tools_belo.py` o desde un cliente MCP (ver abajo) |
+
+**Hallazgo del 27-nov:** el SDK de Python (`mcp` 2.3) recibe **403 de Cloudflare** en `https://b2b.belo.app/mcp`, incluso en el descubrimiento de OAuth, antes de llegar al login. Los clientes que Belo documenta (Claude, Cursor, VS Code, Codex) sí conectan. No intentamos saltar ese bloqueo: se lo preguntamos a Belo (pregunta 1 de [`decisiones.md`](decisiones.md)). Mientras tanto, la lista de tools se obtiene conectando Claude Code como indica la guía:
+
+```bash
+claude mcp add --transport http belo https://b2b.belo.app/mcp
+# luego, dentro de Claude Code: /mcp → belo → autenticar, y pedir la lista de tools con sus parámetros
+```
+
+Las capas detrás de `BeloPort` quedan así:
 
 | Capa | Qué es | Para qué sirve | Cómo se elige |
 |---|---|---|---|
 | 1 · `MockBeloAdapter` | Mock en el mismo proceso, con los datos de Sofía, cotización configurable y modos de fallo | Construir toda la demo, correr los 12 tests y servir la URL pública | `BELO_ADAPTER=mock` (por defecto) |
-| 2 · MCP simulado | Servidor MCP propio (FastMCP) con las 8 tools de la V1, mismos nombres y las respuestas del mock | Escribir y probar `LiveBeloMCPAdapter` desde hoy, hablando el protocolo MCP de verdad, y mostrar al jurado el flujo MCP completo con el sello SIMULATED | `BELO_ADAPTER=live` con `BELO_MCP_URL` apuntando al MCP simulado |
-| 3 · MCP de Belo | El MCP V1 real | Las tools de lectura en vivo, cuando llegue el acceso | `BELO_ADAPTER=live` con `BELO_MCP_URL` de Belo |
+| 2 · MCP simulado | Servidor MCP propio (FastMCP) que imita las tools reales de Belo con las respuestas del mock, incluido el link de aprobación | Probar `LiveBeloMCPAdapter` hablando MCP de verdad, y mostrar el flujo completo en la URL pública con el sello SIMULATED | `BELO_ADAPTER=live` con `BELO_MCP_URL` apuntando al MCP simulado |
+| 3 · MCP de Belo | `https://b2b.belo.app/mcp` | Lecturas en vivo y un movimiento real de monto chico, **solo desde el portátil de quien presenta** | `BELO_ADAPTER=live` con `BELO_MCP_URL=https://b2b.belo.app/mcp`, si Belo habilita nuestro cliente |
 
-Reglas para que el cambio a Belo sea de horas y no de días:
+Reglas:
 
-- Los nombres de las tools salen de la página pública de Belo (belo.app/agentic). Los parámetros y los nombres de campos se traducen en un solo archivo del adaptador.
 - Nadie llama a Belo, ni al MCP simulado, fuera de `BeloPort`.
+- Los nombres de las tools y de sus campos se traducen en un solo archivo del adaptador.
 - El MCP simulado nunca se presenta como Belo: sus respuestas llevan `live=False` y el sello SIMULATED.
-- No esperamos el acceso para empezar nada.
+- Los tokens de OAuth viven en `~/.cfo-agentico/`, nunca en el repositorio ni en el droplet.
 
 ### Preparar el droplet (Cesar, idealmente antes del kickoff)
 
@@ -130,8 +151,8 @@ Una rama por tarea, creada desde `main` actualizado justo antes de empezarla, co
 | `adapter/mcp-simulado` | Servidor MCP propio con las 8 tools de la V1 (mismos nombres, respuestas del mock) y una primera versión de `LiveBeloMCPAdapter` que se conecta a él | 1 | Prueba de humo: cada tool responde por MCP | Juan Carlos |
 | `agent/llm-cliente` | `agent/llm.py`: cliente de Claude, structured outputs, respaldo ante rechazos y textos de plantilla | 2 | — | Juan Carlos |
 | `agent/orquestador-plan` | `load_context → fetch_belo → rules_engine → compose_plan` | 2 | T08 | Juan Carlos |
-| `agent/aprobacion-ejecucion` | `human_approval → execute_and_audit` con `transaction.approve` y MCP Log | 3 | T03, T06 (de punta a punta) | Juan Carlos |
-| `adapter/live-belo-lectura` | Apuntar `LiveBeloMCPAdapter` al MCP real de Belo: URL, autenticación y nombres de campos de `auth.sign_in`, `account.*` y `exchange.fx` | 3, o apenas llegue el acceso | Prueba manual contra el kit | Vanessa |
+| `agent/aprobacion-ejecucion` | `human_approval → execute_and_audit`: OK del plan, link de aprobación de Belo por movimiento, espera de la confirmación y MCP Log | 3 | T03, T06 (de punta a punta) | Juan Carlos |
+| `adapter/live-belo` | `LiveBeloMCPAdapter` contra `https://b2b.belo.app/mcp`: OAuth (reutiliza el login de `listar_tools_belo.py`), lecturas y un movimiento de monto chico que devuelve el link de aprobación de Belo | 3, si Belo habilita nuestro cliente | Prueba manual desde el portátil | Vanessa |
 | `front/cliente-api` | Tipos generados del OpenAPI y conexión de las pantallas a la API real | 3 | — | Brigitte |
 | `agent/perfilado` | `profile_patterns`: el LLM nombra los patrones y redacta las reglas propuestas | 4 | T12 (con Vanessa) | Vanessa |
 
@@ -206,8 +227,8 @@ Horas en hora de Colombia. Cada bloque cierra con un **checkpoint** de 10 minuto
 ### Bloque 0 · Viernes 17:00–18:30 · Kickoff y arranque
 
 - **Todos:** escuchar el kickoff, leer el kit del MCP y las bases de entrega, y votar las 4 decisiones de la sección 1.
-- **Julia:** hacer las 11 preguntas a los mentores de [`decisiones.md`](decisiones.md). Las primeras son las del acceso al MCP: cuándo llega, si hay sandbox, qué transporte usa y si pueden compartir respuestas de ejemplo.
-- **Cesar:** probar `auth.sign_in` y `account.balances` con el kit. Si no quedó listo antes del kickoff, preparar el droplet (ver "Preparar el droplet").
+- **Julia:** hacer las 11 preguntas a los mentores de [`decisiones.md`](decisiones.md). Las primeras son urgentes: el 403 de Cloudflare a nuestro cliente, los nombres de las tools, el rendimiento y las alcancías.
+- **Cesar:** conectar el MCP de Belo con Claude Code, guardar la lista de tools en `docs/belo-mcp/` y probar una consulta de saldos. Si no quedó listo antes del kickoff, preparar el droplet (ver "Preparar el droplet").
 - **Juan Carlos:** `api/esqueleto`. **Brigitte:** `front/esqueleto`. **Vanessa:** `domain/datos-kit`.
 
 ### Bloque 1 · Viernes 18:30–23:30 · Contratos, esqueleto y URL pública
@@ -232,7 +253,7 @@ Horas en hora de Colombia. Cada bloque cierra con un **checkpoint** de 10 minuto
 
 ### Bloque 3 · Sábado 14:00–19:00 · De punta a punta
 
-- **Cesar:** `agent/aprobacion-ejecucion`, `front/cliente-api` y `adapter/live-belo-lectura`.
+- **Cesar:** `agent/aprobacion-ejecucion`, `front/cliente-api` y `adapter/live-belo`.
 - **Juan Carlos:** `api/endpoints-reales` y `domain/autonomia`.
 - **Vanessa:** `domain/perfilador`.
 - **Brigitte:** `front/pantalla-resumen-log` y `front/reiniciar-demo`.
@@ -265,7 +286,7 @@ Horas en hora de Colombia. Cada bloque cierra con un **checkpoint** de 10 minuto
 En este orden, de lo primero que se sacrifica a lo último:
 
 1. `adapter/mcp-simulado`: el mock en proceso alcanza para la demo; solo se pierde mostrar el protocolo MCP de punta a punta.
-2. `LiveBeloMCPAdapter` para escribir: todo lo que mueve dinero queda en el mock con SIMULATED (en la URL pública es así de todos modos).
+2. `LiveBeloMCPAdapter` para mover dinero: todo lo que mueve dinero queda en el mock con SIMULATED (en la URL pública es así de todos modos).
 3. `LiveBeloMCPAdapter` para leer: la URL pública corre entera contra el mock.
 4. Perfilado en la interfaz: se muestra como un paso ya confirmado y el test T12 lo respalda.
 5. Autonomía en vivo: queda solo la tarjeta del cierre.
@@ -278,7 +299,8 @@ En este orden, de lo primero que se sacrifica a lo último:
 | El despliegue falla a última hora | La URL existe desde el viernes y cada merge se despliega. Cada imagen queda etiquetada con su commit: volver atrás es cambiar la etiqueta y correr `docker compose up -d` |
 | El droplet se cae o se queda sin memoria | Reinicio automático y límite de memoria en Compose; demo local y video de respaldo. Cesar tiene acceso a la consola de DigitalOcean |
 | Dos jurados prueban al mismo tiempo | Botón Reiniciar demo y estado inicial sembrado en cada arranque |
-| El acceso al MCP de Belo llega tarde o no llega | Todo corre contra el mock desde el inicio y el cliente MCP ya está probado contra nuestro MCP simulado. Si el acceso nunca llega, lo que no corre en vivo lleva el sello SIMULATED (D10) |
+| Cloudflare sigue bloqueando nuestro cliente MCP | Todo corre contra el mock y el MCP simulado. Lo en vivo se muestra desde un cliente que Belo sí acepta (Claude Desktop o Claude Code con el conector de Belo), y lo demás lleva el sello SIMULATED (D10) |
+| El link de aprobación vence o el código tarda en la demo | Un solo movimiento real, de monto chico; el resto en el mock |
 | El LLM falla o tarda | Textos de plantilla por cada uso del LLM y video de respaldo |
 | Dos personas tocan el mismo archivo | Dueños por carpeta, una rama por tarea y PR cortos |
 | Se rompe `main` el sábado por la noche | Congelamiento a las 22:00; Cesar revisa cada merge |
