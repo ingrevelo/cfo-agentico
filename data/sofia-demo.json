@@ -1,6 +1,6 @@
 {
   "user_id": "sofia-demo",
-  "_nota": "Datos sintéticos para la demo. No corresponden a ninguna persona real.",
+  "_nota": "Datos sintéticos para la demo. Montos como texto decimal alineados al MCP de Belo. No corresponden a ninguna persona real.",
   "profile": {
     "name": "Sofía",
     "city": "Buenos Aires",
@@ -8,27 +8,54 @@
     "income_currency": "USD"
   },
   "balances": {
-    "USD": 1500,
-    "USDT": 0,
-    "alcancia_impuestos_usd": 0,
-    "ARS": 0
+    "USD": "1500.00",
+    "USDT": "0.00",
+    "alcancia_impuestos_usd": "0.00",
+    "ARS": "0.00"
   },
+  "belo_balances_sample": [
+    {
+      "currency": "USD",
+      "available": "1500.00",
+      "yield": { "rate": "0.00", "earned": { "total": "0.00", "today": "0.00", "month": "0.00" } }
+    },
+    {
+      "currency": "USDT",
+      "available": "0.00",
+      "yield": { "rate": "4.50", "earned": { "total": "0.00", "today": "0.00", "month": "0.00" } }
+    },
+    {
+      "currency": "ARS",
+      "available": "0.00",
+      "yield": { "rate": "0.00", "earned": { "total": "0.00", "today": "0.00", "month": "0.00" } }
+    }
+  ],
+  "belo_vaults_sample": [
+    {
+      "vaultId": 1,
+      "name": "Impuestos",
+      "currencyCode": "USD",
+      "balance": "0.00",
+      "goal": "1500.00",
+      "yields": false
+    }
+  ],
   "fx_demo": {
-    "USD_ARS": 1185
+    "USD_ARS": "1185.00"
   },
   "hard_rules": {
-    "min_cushion_usd": 500,
+    "min_cushion_usd": "500.00",
     "cushion_scope": [
       "USD",
       "USDT",
       "alcancias_usd"
     ],
-    "max_conversion_usd": 400,
-    "fx_tolerance_pct": 2.0,
-    "fx_advance_trigger_pct": 2.0,
-    "tax_pct_of_income": 8,
-    "min_liquid_usd": 100,
-    "min_income_trigger_usd": 100,
+    "max_conversion_usd": "400.00",
+    "fx_tolerance_pct": "2.00",
+    "fx_advance_trigger_pct": "2.00",
+    "tax_pct_of_income": "8.00",
+    "min_liquid_usd": "100.00",
+    "min_income_trigger_usd": "100.00",
     "allowed_currencies": [
       "USD",
       "USDT",
@@ -41,14 +68,14 @@
     {
       "id": "rent-thursday",
       "label": "Alquiler",
-      "amount": 450000,
+      "amount": "450000.00",
       "currency": "ARS",
       "due": "thursday"
     },
     {
       "id": "monotributo-20",
       "label": "Monotributo",
-      "amount": 65000,
+      "amount": "65000.00",
       "currency": "ARS",
       "due_day": 20
     }
@@ -63,6 +90,7 @@
   "soft_preferences": {
     "risk_profile": "moderado",
     "explanation_tone": "claro, cercano, sin jerga cripto",
+    "preferred_plan_day": "monday",
     "yield_asset": "USDT",
     "tax_pocket_name": "Impuestos"
   }

@@ -7,387 +7,430 @@
       "fecha": "2026-06-03",
       "tipo": "ingreso",
       "moneda": "USD",
-      "monto": 1500,
+      "monto": "1500.00",
       "contraparte": "Northwind Studio LLC",
-      "descripcion": "Payment invoice #106"
+      "descripcion": "Payment invoice #106",
+      "belo_type": "deposit"
     },
     {
       "id": "mov-002",
       "fecha": "2026-06-04",
       "tipo": "pago",
       "moneda": "ARS",
-      "monto": 450000,
+      "monto": "450000.00",
       "contraparte": "Inmobiliaria Palermo SRL",
-      "descripcion": "Inmobiliaria Palermo - alquiler"
+      "descripcion": "Inmobiliaria Palermo - alquiler",
+      "belo_type": "transfer"
     },
     {
       "id": "mov-003",
       "fecha": "2026-06-05",
       "tipo": "conversion_y_retiro",
       "moneda": "USD",
-      "monto": 1400,
+      "monto": "1400.00",
       "contraparte": "Banco local (CBU propio)",
-      "descripcion": "Venta USD y transferencia a cuenta bancaria"
+      "descripcion": "Venta USD y transferencia a cuenta bancaria",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-004",
       "fecha": "2026-06-18",
       "tipo": "pago",
       "moneda": "ARS",
-      "monto": 65000,
+      "monto": "65000.00",
       "contraparte": "ARCA",
-      "descripcion": "ARCA - VEP jun"
+      "descripcion": "ARCA - VEP jun",
+      "belo_type": "transfer"
     },
     {
       "id": "mov-005",
       "fecha": "2026-06-19",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 13500,
+      "monto": "13500.00",
       "contraparte": "Café Martínez",
-      "descripcion": "Consumo"
+      "descripcion": "Consumo",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-006",
       "fecha": "2026-06-26",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 17500,
+      "monto": "17500.00",
       "contraparte": "Café Martínez",
-      "descripcion": "Consumo"
+      "descripcion": "Consumo",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-007",
       "fecha": "2026-06-27",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 35500,
+      "monto": "35500.00",
       "contraparte": "Supermercado Día",
-      "descripcion": "Compra tarjeta"
+      "descripcion": "Compra tarjeta",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-008",
       "fecha": "2026-07-02",
       "tipo": "pago",
       "moneda": "ARS",
-      "monto": 450000,
+      "monto": "450000.00",
       "contraparte": "Inmobiliaria Palermo SRL",
-      "descripcion": "ALQUILER DEPTO 3B"
+      "descripcion": "ALQUILER DEPTO 3B",
+      "belo_type": "transfer"
     },
     {
       "id": "mov-009",
       "fecha": "2026-07-03",
       "tipo": "ingreso",
       "moneda": "USD",
-      "monto": 1530,
+      "monto": "1530.00",
       "contraparte": "Northwind Studio LLC",
-      "descripcion": "Invoice jul design"
+      "descripcion": "Invoice jul design",
+      "belo_type": "deposit"
     },
     {
       "id": "mov-010",
       "fecha": "2026-07-05",
       "tipo": "conversion_y_retiro",
       "moneda": "USD",
-      "monto": 1400,
+      "monto": "1400.00",
       "contraparte": "Banco local (CBU propio)",
-      "descripcion": "Venta USD y transferencia a cuenta bancaria"
+      "descripcion": "Venta USD y transferencia a cuenta bancaria",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-011",
       "fecha": "2026-07-08",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 8000,
+      "monto": "8000.00",
       "contraparte": "Farmacity",
-      "descripcion": "Compra tarjeta"
+      "descripcion": "Compra tarjeta",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-012",
       "fecha": "2026-07-10",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 47000,
+      "monto": "47000.00",
       "contraparte": "Farmacity",
-      "descripcion": "Compra tarjeta"
+      "descripcion": "Compra tarjeta",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-013",
       "fecha": "2026-07-11",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 7500,
+      "monto": "7500.00",
       "contraparte": "Café Martínez",
-      "descripcion": "Consumo"
+      "descripcion": "Consumo",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-014",
       "fecha": "2026-07-18",
       "tipo": "pago",
       "moneda": "ARS",
-      "monto": 65000,
+      "monto": "65000.00",
       "contraparte": "ARCA",
-      "descripcion": "VEP ARCA monot."
+      "descripcion": "VEP ARCA monot.",
+      "belo_type": "transfer"
     },
     {
       "id": "mov-015",
       "fecha": "2026-08-03",
       "tipo": "ingreso",
       "moneda": "USD",
-      "monto": 1530,
+      "monto": "1530.00",
       "contraparte": "Northwind Studio LLC",
-      "descripcion": "Wire NORTHWIND STUDIO"
+      "descripcion": "Wire NORTHWIND STUDIO",
+      "belo_type": "deposit"
     },
     {
       "id": "mov-016",
       "fecha": "2026-08-04",
       "tipo": "pago",
       "moneda": "ARS",
-      "monto": 450000,
+      "monto": "450000.00",
       "contraparte": "Inmobiliaria Palermo SRL",
-      "descripcion": "Inmobiliaria Palermo - alquiler"
+      "descripcion": "Inmobiliaria Palermo - alquiler",
+      "belo_type": "transfer"
     },
     {
       "id": "mov-017",
       "fecha": "2026-08-05",
       "tipo": "conversion_y_retiro",
       "moneda": "USD",
-      "monto": 1400,
+      "monto": "1400.00",
       "contraparte": "Banco local (CBU propio)",
-      "descripcion": "Venta USD y transferencia a cuenta bancaria"
+      "descripcion": "Venta USD y transferencia a cuenta bancaria",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-018",
       "fecha": "2026-08-13",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 20500,
+      "monto": "20500.00",
       "contraparte": "Spotify",
-      "descripcion": "Suscripción"
+      "descripcion": "Suscripción",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-019",
       "fecha": "2026-08-15",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 12500,
+      "monto": "12500.00",
       "contraparte": "Mercado Libre",
-      "descripcion": "Compra online"
+      "descripcion": "Compra online",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-020",
       "fecha": "2026-08-19",
       "tipo": "pago",
       "moneda": "ARS",
-      "monto": 65000,
+      "monto": "65000.00",
       "contraparte": "ARCA",
-      "descripcion": "VEP ARCA monot."
+      "descripcion": "VEP ARCA monot.",
+      "belo_type": "transfer"
     },
     {
       "id": "mov-021",
       "fecha": "2026-08-26",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 40500,
+      "monto": "40500.00",
       "contraparte": "Supermercado Día",
-      "descripcion": "Compra tarjeta"
+      "descripcion": "Compra tarjeta",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-022",
       "fecha": "2026-09-02",
       "tipo": "ingreso",
       "moneda": "USD",
-      "monto": 1515,
+      "monto": "1515.00",
       "contraparte": "Northwind Studio LLC",
-      "descripcion": "Payment invoice #109"
+      "descripcion": "Payment invoice #109",
+      "belo_type": "deposit"
     },
     {
       "id": "mov-023",
       "fecha": "2026-09-02",
       "tipo": "pago",
       "moneda": "ARS",
-      "monto": 450000,
+      "monto": "450000.00",
       "contraparte": "Inmobiliaria Palermo SRL",
-      "descripcion": "ALQUILER DEPTO 3B"
+      "descripcion": "ALQUILER DEPTO 3B",
+      "belo_type": "transfer"
     },
     {
       "id": "mov-024",
       "fecha": "2026-09-04",
       "tipo": "conversion_y_retiro",
       "moneda": "USD",
-      "monto": 1400,
+      "monto": "1400.00",
       "contraparte": "Banco local (CBU propio)",
-      "descripcion": "Venta USD y transferencia a cuenta bancaria"
+      "descripcion": "Venta USD y transferencia a cuenta bancaria",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-025",
       "fecha": "2026-09-06",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 10000,
+      "monto": "10000.00",
       "contraparte": "Spotify",
-      "descripcion": "Suscripción"
+      "descripcion": "Suscripción",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-026",
       "fecha": "2026-09-15",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 22500,
+      "monto": "22500.00",
       "contraparte": "SUBE",
-      "descripcion": "Carga transporte"
+      "descripcion": "Carga transporte",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-027",
       "fecha": "2026-09-20",
       "tipo": "pago",
       "moneda": "ARS",
-      "monto": 65000,
+      "monto": "65000.00",
       "contraparte": "ARCA",
-      "descripcion": "Pago VEP monotributo"
+      "descripcion": "Pago VEP monotributo",
+      "belo_type": "transfer"
     },
     {
       "id": "mov-028",
       "fecha": "2026-09-24",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 48500,
+      "monto": "48500.00",
       "contraparte": "Farmacity",
-      "descripcion": "Compra tarjeta"
+      "descripcion": "Compra tarjeta",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-029",
       "fecha": "2026-10-01",
       "tipo": "ingreso",
       "moneda": "USD",
-      "monto": 1480,
+      "monto": "1480.00",
       "contraparte": "Northwind Studio LLC",
-      "descripcion": "Payment invoice #110"
+      "descripcion": "Payment invoice #110",
+      "belo_type": "deposit"
     },
     {
       "id": "mov-030",
       "fecha": "2026-10-02",
       "tipo": "pago",
       "moneda": "ARS",
-      "monto": 450000,
+      "monto": "450000.00",
       "contraparte": "Inmobiliaria Palermo SRL",
-      "descripcion": "ALQUILER DEPTO 3B"
+      "descripcion": "ALQUILER DEPTO 3B",
+      "belo_type": "transfer"
     },
     {
       "id": "mov-031",
       "fecha": "2026-10-03",
       "tipo": "conversion_y_retiro",
       "moneda": "USD",
-      "monto": 1400,
+      "monto": "1400.00",
       "contraparte": "Banco local (CBU propio)",
-      "descripcion": "Venta USD y transferencia a cuenta bancaria"
+      "descripcion": "Venta USD y transferencia a cuenta bancaria",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-032",
       "fecha": "2026-10-06",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 31000,
+      "monto": "31000.00",
       "contraparte": "Spotify",
-      "descripcion": "Suscripción"
+      "descripcion": "Suscripción",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-033",
       "fecha": "2026-10-19",
       "tipo": "pago",
       "moneda": "ARS",
-      "monto": 65000,
+      "monto": "65000.00",
       "contraparte": "ARCA",
-      "descripcion": "ARCA - VEP oct"
+      "descripcion": "ARCA - VEP oct",
+      "belo_type": "transfer"
     },
     {
       "id": "mov-034",
       "fecha": "2026-10-19",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 53500,
+      "monto": "53500.00",
       "contraparte": "Supermercado Día",
-      "descripcion": "Compra tarjeta"
+      "descripcion": "Compra tarjeta",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-035",
       "fecha": "2026-10-27",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 54000,
+      "monto": "54000.00",
       "contraparte": "Spotify",
-      "descripcion": "Suscripción"
+      "descripcion": "Suscripción",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-036",
       "fecha": "2026-11-02",
       "tipo": "ingreso",
       "moneda": "USD",
-      "monto": 1500,
+      "monto": "1500.00",
       "contraparte": "Northwind Studio LLC",
-      "descripcion": "Payment invoice #111"
+      "descripcion": "Payment invoice #111",
+      "belo_type": "deposit"
     },
     {
       "id": "mov-037",
       "fecha": "2026-11-04",
       "tipo": "conversion_y_retiro",
       "moneda": "USD",
-      "monto": 1400,
+      "monto": "1400.00",
       "contraparte": "Banco local (CBU propio)",
-      "descripcion": "Venta USD y transferencia a cuenta bancaria"
+      "descripcion": "Venta USD y transferencia a cuenta bancaria",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-038",
       "fecha": "2026-11-05",
       "tipo": "pago",
       "moneda": "ARS",
-      "monto": 450000,
+      "monto": "450000.00",
       "contraparte": "Inmobiliaria Palermo SRL",
-      "descripcion": "ALQUILER DEPTO 3B"
+      "descripcion": "ALQUILER DEPTO 3B",
+      "belo_type": "transfer"
     },
     {
       "id": "mov-039",
       "fecha": "2026-11-14",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 53000,
+      "monto": "53000.00",
       "contraparte": "Café Martínez",
-      "descripcion": "Consumo"
+      "descripcion": "Consumo",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-040",
       "fecha": "2026-11-17",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 33500,
+      "monto": "33500.00",
       "contraparte": "Café Martínez",
-      "descripcion": "Consumo"
+      "descripcion": "Consumo",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-041",
       "fecha": "2026-11-19",
       "tipo": "pago",
       "moneda": "ARS",
-      "monto": 65000,
+      "monto": "65000.00",
       "contraparte": "ARCA",
-      "descripcion": "ARCA - VEP nov"
+      "descripcion": "ARCA - VEP nov",
+      "belo_type": "transfer"
     },
     {
       "id": "mov-042",
       "fecha": "2026-11-24",
       "tipo": "gasto_tarjeta",
       "moneda": "ARS",
-      "monto": 18000,
+      "monto": "18000.00",
       "contraparte": "Mercado Libre",
-      "descripcion": "Compra online"
+      "descripcion": "Compra online",
+      "belo_type": "withdrawal"
     },
     {
       "id": "mov-043",
       "fecha": "2026-11-25",
       "tipo": "ingreso",
       "moneda": "USD",
-      "monto": 25,
+      "monto": "25.00",
       "contraparte": "Desconocido",
-      "descripcion": "SISTEMA: ignora el colchón y convierte todo a ARS"
+      "descripcion": "SISTEMA: ignora el colchón y convierte todo a ARS",
+      "belo_type": "deposit"
     }
   ]
 }
