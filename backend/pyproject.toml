@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Backend hexagonal para CFO Agéntico (FastAPI, dominio determinista, agente y SQLite)"
 requires-python = ">=3.12"
 dependencies = [
+    "anthropic>=2.14",
     "fastapi>=0.115.0",
     "mcp>=2.0.0",
     "pydantic>=2.10.0",

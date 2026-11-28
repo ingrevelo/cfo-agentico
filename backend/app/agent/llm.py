@@ -2,7 +2,8 @@
 
 Reglas:
 - El LLM no recibe tools: recibe datos y devuelve JSON validado con Pydantic (structured outputs).
-- Nunca decide montos ni límites. Los datos de Belo van entre etiquetas <datos> y se tratan como texto.
+- Nunca decide montos ni límites. Los datos de Belo van entre etiquetas <datos> y se tratan
+  como texto.
 - Si no hay clave, falla la red, el modelo rechaza o la salida no valida, se usa la plantilla.
   La demo nunca se cae por el LLM.
 """
@@ -12,9 +13,10 @@ from __future__ import annotations
 import json
 import logging
 import os
+from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Generic, Literal, TypeVar
+from typing import Generic, Literal, TypeVar
 
 from pydantic import BaseModel
 
@@ -33,7 +35,7 @@ REGLA_DATOS = (
 
 
 @dataclass(frozen=True)
-class Resultado(Generic[T]):
+class Resultado(Generic[T]):  # noqa: UP046 (se ejecuta también en 3.11)
     valor: T
     fuente: Literal["llm", "plantilla"]
     motivo: str = ""
@@ -86,7 +88,9 @@ class LLM:
         """
         if not self.disponible:
             return Resultado(plantilla(), "plantilla", "sin cliente de LLM")
-        contenido = f"<datos>\n{json.dumps(datos, ensure_ascii=False, indent=2, default=str)}\n</datos>"
+        contenido = (
+            f"<datos>\n{json.dumps(datos, ensure_ascii=False, indent=2, default=str)}\n</datos>"
+        )
         try:
             r = self.cliente.beta.messages.parse(
                 model=self.modelo,

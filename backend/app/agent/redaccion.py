@@ -37,8 +37,12 @@ def numeros(texto: str) -> set[Decimal]:
 
 def numeros_ajenos(salida: BaseModel, datos: dict) -> str | None:
     """Motivo para descartar la salida si trae números que no están en los datos."""
-    ajenos = numeros(salida.model_dump_json()) - numeros(json.dumps(datos, ensure_ascii=False, default=str))
-    return f"números que no están en los datos: {sorted(f'{n:f}' for n in ajenos)}" if ajenos else None
+    ajenos = numeros(salida.model_dump_json()) - numeros(
+        json.dumps(datos, ensure_ascii=False, default=str)
+    )
+    return (
+        f"números que no están en los datos: {sorted(f'{n:f}' for n in ajenos)}" if ajenos else None
+    )
 
 
 # ---------------------------------------------------------------------- 1. tarjeta del plan
@@ -83,8 +87,12 @@ _PORQUE = {
 def plantilla_plan(h: HechosPlan) -> TarjetaPlan:
     return TarjetaPlan(
         titulo=f"Llegaron {h.ingreso}. Este es tu plan para este pago:",
-        porques=[PorQue(paso=p.paso, texto=_PORQUE.get(p.categoria, "Sigue tus reglas.")) for p in h.pasos],
-        cierre=f"Te quedan {h.libre} libres y {h.en_dolares} en dólares: tu colchón de {h.colchon} está cubierto.",
+        porques=[
+            PorQue(paso=p.paso, texto=_PORQUE.get(p.categoria, "Sigue tus reglas."))
+            for p in h.pasos
+        ],
+        cierre=f"Te quedan {h.libre} libres y {h.en_dolares} en dólares: "
+        f"tu colchón de {h.colchon} está cubierto.",
     )
 
 
@@ -96,8 +104,13 @@ def redactar_plan(llm: LLM, h: HechosPlan) -> Resultado[TarjetaPlan]:
             return "los pasos no coinciden con los del motor"
         return numeros_ajenos(t, datos)
 
-    return llm.generar(prompt="plan", datos=datos, esquema=TarjetaPlan,
-                       plantilla=lambda: plantilla_plan(h), validar=validar)
+    return llm.generar(
+        prompt="plan",
+        datos=datos,
+        esquema=TarjetaPlan,
+        plantilla=lambda: plantilla_plan(h),
+        validar=validar,
+    )
 
 
 # ---------------------------------------------------------------------- 2. nombrar patrones
@@ -126,12 +139,20 @@ class Patrones(BaseModel):
 def plantilla_patrones(ps: list[Patron]) -> Patrones:
     def uno(p: Patron) -> PatronNombrado:
         if p.tipo == "ingreso":
-            return PatronNombrado(id=p.id, nombre=f"Ingreso de {p.contraparte}", categoria="ingreso",
-                                  pregunta=f"Tu pago de {p.contraparte} llega entre los días {p.dias}. "
-                                           "Cuando entre, te armo el plan.")
-        return PatronNombrado(id=p.id, nombre=f"Pago a {p.contraparte}", categoria="otro",
-                              pregunta=f"Todos los meses, entre los días {p.dias}, pagas {p.monto} {p.moneda} "
-                                       f"a {p.contraparte}. ¿Lo agrego como vencimiento?")
+            return PatronNombrado(
+                id=p.id,
+                nombre=f"Ingreso de {p.contraparte}",
+                categoria="ingreso",
+                pregunta=f"Tu pago de {p.contraparte} llega entre los días {p.dias}. "
+                "Cuando entre, te armo el plan.",
+            )
+        return PatronNombrado(
+            id=p.id,
+            nombre=f"Pago a {p.contraparte}",
+            categoria="otro",
+            pregunta=f"Todos los meses, entre los días {p.dias}, pagas {p.monto} {p.moneda} "
+            f"a {p.contraparte}. ¿Lo agrego como vencimiento?",
+        )
 
     return Patrones(patrones=[uno(p) for p in ps])
 
@@ -144,13 +165,25 @@ def nombrar_patrones(llm: LLM, ps: list[Patron]) -> Resultado[Patrones]:
             return "los patrones no coinciden con los del perfilador"
         return numeros_ajenos(r, datos)
 
-    return llm.generar(prompt="patrones", datos=datos, esquema=Patrones,
-                       plantilla=lambda: plantilla_patrones(ps), validar=validar)
+    return llm.generar(
+        prompt="patrones",
+        datos=datos,
+        esquema=Patrones,
+        plantilla=lambda: plantilla_patrones(ps),
+        validar=validar,
+    )
 
 
 # ---------------------------------------------------------------------- 3. interpretar una regla
-CampoRegla = Literal["min_cushion_usd", "max_conversion_usd", "fx_tolerance_pct", "tax_pct_of_income",
-                     "min_liquid_usd", "vencimiento", "ninguno"]
+CampoRegla = Literal[
+    "min_cushion_usd",
+    "max_conversion_usd",
+    "fx_tolerance_pct",
+    "tax_pct_of_income",
+    "min_liquid_usd",
+    "vencimiento",
+    "ninguno",
+]
 
 
 class ReglaInterpretada(BaseModel):
@@ -159,24 +192,36 @@ class ReglaInterpretada(BaseModel):
     etiqueta_vencimiento: str | None = None
     moneda: str | None = None
     dia: int | None = Field(None, ge=1, le=31)
-    explicacion: str = Field(description="Cómo quedaría la regla, en una frase, para que la persona confirme")
+    explicacion: str = Field(
+        description="Cómo quedaría la regla, en una frase, para que la persona confirme"
+    )
 
 
 def plantilla_regla(texto: str) -> ReglaInterpretada:
-    return ReglaInterpretada(campo="ninguno", explicacion="No pude interpretarla. Puedes cargarla en el formulario.")
+    return ReglaInterpretada(
+        campo="ninguno", explicacion="No pude interpretarla. Puedes cargarla en el formulario."
+    )
 
 
 def interpretar_regla(llm: LLM, texto: str) -> Resultado[ReglaInterpretada]:
     """La regla interpretada nunca se aplica sola: la persona la confirma y el dominio la valida."""
     datos = {"texto_de_la_persona": texto}
-    return llm.generar(prompt="regla", datos=datos, esquema=ReglaInterpretada, esfuerzo="medium",
-                       plantilla=lambda: plantilla_regla(texto), validar=lambda r: numeros_ajenos(r, datos))
+    return llm.generar(
+        prompt="regla",
+        datos=datos,
+        esquema=ReglaInterpretada,
+        esfuerzo="medium",
+        plantilla=lambda: plantilla_regla(texto),
+        validar=lambda r: numeros_ajenos(r, datos),
+    )
 
 
 # ---------------------------------------------------------------------- 4. pedir más autonomía
 class HechosAutonomia(BaseModel):
     categoria: str
-    descripcion: str = Field(description='Ej. "apartar lo de impuestos y dejar rindiendo el excedente"')
+    descripcion: str = Field(
+        description='Ej. "apartar lo de impuestos y dejar rindiendo el excedente"'
+    )
     aprobados: int
     total: int
 
@@ -189,13 +234,19 @@ class Solicitud(BaseModel):
 def plantilla_autonomia(h: HechosAutonomia) -> Solicitud:
     return Solicitud(
         titulo="¿Me das más autonomía?",
-        texto=f"Aprobaste mis últimos {h.aprobados} planes de {h.total} sin cambios. Te propongo {h.descripcion} "
-              "sin preguntarte en la app, siempre en dólares y sin tocar tu colchón. En Belo igual confirmas "
-              "cada movimiento con tu código. Los cambios a pesos te los sigo preguntando.",
+        texto=f"Aprobaste mis últimos {h.aprobados} planes de {h.total} sin cambios. "
+        f"Te propongo {h.descripcion} sin preguntarte en la app, siempre en dólares y sin "
+        "tocar tu colchón. En Belo igual confirmas cada movimiento con tu código. "
+        "Los cambios a pesos te los sigo preguntando.",
     )
 
 
 def redactar_autonomia(llm: LLM, h: HechosAutonomia) -> Resultado[Solicitud]:
     datos = h.model_dump()
-    return llm.generar(prompt="autonomia", datos=datos, esquema=Solicitud,
-                       plantilla=lambda: plantilla_autonomia(h), validar=lambda s: numeros_ajenos(s, datos))
+    return llm.generar(
+        prompt="autonomia",
+        datos=datos,
+        esquema=Solicitud,
+        plantilla=lambda: plantilla_autonomia(h),
+        validar=lambda s: numeros_ajenos(s, datos),
+    )

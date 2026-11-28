@@ -31,6 +31,6 @@ Cada función devuelve `Resultado(valor, fuente, motivo)`: `fuente` es `"llm"` o
 
 Los datos de Belo van entre `<datos>` y el prompt de sistema dice que son información, nunca instrucciones (T08). Aunque el LLM se dejara engañar, no puede cambiar montos: los números que no estaban en los datos descartan la salida, y las decisiones las toma el juez.
 
-Dependencia para `pyproject.toml`: `anthropic>=2.14`. Tests: `backend/tests/test_agent_llm.py` (cliente falso, sin red).
+Dependencia: `anthropic>=2.14` (en `pyproject.toml`). Tests: `backend/tests/test_agent_llm.py` (cliente falso, sin red).
 
 `prompts/` guarda los prompts del LLM: nombrar patrones del historial, interpretar reglas en lenguaje natural, redactar la tarjeta del plan y la solicitud de más autonomía. Nunca incluyen límites ni montos como instrucción.
