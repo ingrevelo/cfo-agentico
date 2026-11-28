@@ -1,81 +1,56 @@
-import { useState } from 'react';
-import { obtenerSofia, type ReglasDuras, type Vencimiento } from './api/cliente';
-import PantallaReglas from './screens/reglas/PantallaReglas';
-import PantallaPlan from './screens/plan/PantallaPlan';
+// El armazón de la app: el proveedor del estado, la barra de pasos, la pantalla
+// que toca según `vista`, y la región que anuncia los cambios a un lector de pantalla.
+import { AvisoSintetico } from './components/avisos';
+import BarraPasos from './components/BarraPasos';
+import { ProveedorApp, useApp } from './state/contexto';
 import PantallaAprobacion from './screens/aprobacion/PantallaAprobacion';
+import PantallaLanding from './screens/landing/PantallaLanding';
+import PantallaLogin from './screens/login/PantallaLogin';
+import PantallaPerfilado from './screens/perfilado/PantallaPerfilado';
+import PantallaPlan from './screens/plan/PantallaPlan';
+import PantallaReglas from './screens/reglas/PantallaReglas';
 import PantallaResumen from './screens/resumen/PantallaResumen';
 
-type Pantalla = 'reglas' | 'plan' | 'aprobacion' | 'resumen';
-
-const PASOS: { id: Pantalla; nombre: string }[] = [
-  { id: 'reglas', nombre: 'Reglas' },
-  { id: 'plan', nombre: 'Plan' },
-  { id: 'aprobacion', nombre: 'Aprobación' },
-  { id: 'resumen', nombre: 'Resumen' },
-];
-
-export default function App() {
-  const datos = obtenerSofia();
-
-  // Navegación entre las 4 pantallas, sin router: una sola variable de estado.
-  const [pantalla, setPantalla] = useState<Pantalla>('reglas');
-
-  // Las reglas editadas viven acá, así la pantalla del plan usa lo que Sofía confirmó.
-  const [reglas, setReglas] = useState<ReglasDuras>(datos.hard_rules);
-  const [vencimientos, setVencimientos] = useState<Vencimiento[]>(datos.dues);
-
-  const cambiarRegla = (campo: keyof ReglasDuras, valor: number) =>
-    setReglas((previas) => ({ ...previas, [campo]: valor }));
-
-  const cambiarVencimiento = (id: string, monto: number) =>
-    setVencimientos((previos) => previos.map((v) => (v.id === id ? { ...v, amount: monto } : v)));
+function Contenido() {
+  const { estado } = useApp();
+  const conPasos = estado.vista !== 'landing' && estado.vista !== 'login';
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-md px-4 pb-10 pt-6">
-      <nav aria-label="Pasos de la demo" className="mb-6 flex flex-wrap gap-1">
-        {PASOS.map((paso) => (
-          <button
-            key={paso.id}
-            type="button"
-            aria-current={pantalla === paso.id ? 'step' : undefined}
-            onClick={() => setPantalla(paso.id)}
-            className={
-              pantalla === paso.id
-                ? 'h-10 rounded-full bg-ink px-4 text-sm font-semibold text-white'
-                : 'boton-texto'
-            }
-          >
-            {paso.nombre}
-          </button>
-        ))}
-      </nav>
+    <div className="mx-auto min-h-screen w-full max-w-3xl px-4 pb-10 pt-6">
+      {/* Lo que acaba de pasar, para quien usa un lector de pantalla. */}
+      <p aria-live="polite" className="sr-only">
+        {estado.anuncio}
+      </p>
+
+      {conPasos && <BarraPasos />}
 
       <main>
-        {pantalla === 'reglas' && (
-          <PantallaReglas
-            datos={datos}
-            reglas={reglas}
-            vencimientos={vencimientos}
-            onCambiarRegla={cambiarRegla}
-            onCambiarVencimiento={cambiarVencimiento}
-            onConfirmar={() => setPantalla('plan')}
-          />
-        )}
-        {pantalla === 'plan' && (
-          <PantallaPlan
-            datos={datos}
-            reglas={reglas}
-            vencimientos={vencimientos}
-            onAprobar={() => setPantalla('aprobacion')}
-          />
-        )}
-        {pantalla === 'aprobacion' && <PantallaAprobacion />}
-        {pantalla === 'resumen' && <PantallaResumen />}
+        {estado.vista === 'landing' && <PantallaLanding />}
+        {estado.vista === 'login' && <PantallaLogin />}
+        {estado.vista === 'perfilado' && <PantallaPerfilado />}
+        {estado.vista === 'reglas' && <PantallaReglas />}
+        {estado.vista === 'plan' && <PantallaPlan />}
+        {estado.vista === 'aprobacion' && <PantallaAprobacion />}
+        {estado.vista === 'resumen' && <PantallaResumen />}
       </main>
 
-      <footer className="mt-10 text-xs leading-relaxed text-ash">
-        CFO Agéntico · Dev IngenierIA · {datos._nota}
-      </footer>
+      {estado.vista !== 'landing' && (
+        <footer className="mt-10 space-y-3">
+          <AvisoSintetico />
+          <p className="text-xs leading-relaxed text-ash-texto">
+            CFO Agéntico · Dev IngenierIA. Los datos de esta demo son inventados y no corresponden a
+            ninguna persona ni empresa real.
+          </p>
+        </footer>
+      )}
     </div>
+  );
+}
+
+export default function App() {
+  return (
+    <ProveedorApp>
+      <Contenido />
+    </ProveedorApp>
   );
 }
