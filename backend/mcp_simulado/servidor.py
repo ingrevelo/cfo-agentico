@@ -122,7 +122,7 @@ def belo_get_transfer_networks(currency: str) -> dict:
 @herramienta(LECTURA)
 def belo_list_vaults(currencyCode: str | None = None) -> dict:  # noqa: N803
     """Bóvedas de ahorro. Desde este servidor no se puede meter ni sacar dinero de una bóveda."""
-    return _sim({"data": [estado.boveda()] if currencyCode in (None, "USD") else []})
+    return _sim({"data": [estado.boveda()] if currencyCode in (None, "USDC") else []})
 
 
 @herramienta(LECTURA)
@@ -187,7 +187,7 @@ def simulado_configurar(
     aprobacion: Literal["auto", "manual", "rechazo"] | None = None,
     fallo: Literal["ninguno", "timeout"] | None = None,
 ) -> dict:
-    """Cambia la cotización USD/ARGt, el modo de aprobación o el modo de fallo (T05 y T09)."""
+    """Cambia la cotización USDC/ARGt, el modo de aprobación o el modo de fallo (T05 y T09)."""
     if fx_usd_ars is not None:
         estado.fx_usd_ars = dec(fx_usd_ars)
     if aprobacion is not None:
@@ -207,7 +207,7 @@ def simulado_configurar(
 
 @herramienta()
 def simulado_ingreso(monto_usd: str, contraparte: str = "Cliente de la demo") -> dict:
-    """Simula la llegada de un pago en USD a la cuenta de Sofía."""
+    """Simula la llegada de un pago en USDC a la cuenta de Sofía."""
     return _sim(estado.ingreso(monto_usd, contraparte))
 
 

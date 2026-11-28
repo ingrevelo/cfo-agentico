@@ -10,7 +10,7 @@ PLAN = "/api/planes/plan-ing01"
 
 def test_reglas_con_montos_como_texto() -> None:
     j = c.get("/api/reglas").json()
-    assert j["balances"]["USD"] == "1500.00"
+    assert j["balances"]["USDC"] == "1500.00"
     assert j["hard_rules"]["min_cushion_usd"] == "500.00"
     assert j["dues"][0]["amount"] == "450000.00"
 

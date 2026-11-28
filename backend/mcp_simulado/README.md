@@ -26,12 +26,12 @@ Mismos nombres y parámetros que las reales ([`docs/belo-mcp/tools.md`](../../do
 
 | Tool | Qué hace en el simulado |
 |---|---|
-| `belo_get_balances` | USD, USDT y ARGt de `data/sofia-demo.json`; USDT rinde 4,5% anual (valor sintético) |
+| `belo_get_balances` | USDC, USDT y ARGt (los `USD` y `ARS` de `data/sofia-demo.json` se traducen, D18); USDT rinde 4,5% anual (valor sintético) |
 | `belo_list_transactions` | Los 43 movimientos de `data/historial-sofia.json` más lo ejecutado, con `currency`, `from`, `to`, `type`, `page` y `limit` |
 | `belo_get_transaction` | Estado: `quoted`, `awaiting_approval`, `success` o `failed` |
-| `belo_get_transfer_networks` | Redes sintéticas para ARGt, USDT y USD |
+| `belo_get_transfer_networks` | Redes sintéticas para ARGt, USDT y USDC |
 | `belo_list_vaults`, `belo_get_vault` | La bóveda "Impuestos". Solo lectura, como en Belo |
-| `belo_preview_swap` | Pares `USDT/USD`, `USD/ARGt` y `USDT/ARGt`, con `BUY` o `SELL`. Vence a los 15 minutos |
+| `belo_preview_swap` | Pares `USDT/USDC`, `USDC/ARGt` y `USDT/ARGt`, con `BUY` o `SELL`. Vence a los 15 minutos |
 | `belo_preview_transfer` | Interna (`BELOTAG`, `EMAIL`, `USER`), a banco (`CVU`, `CBU`, `ALIAS`, solo ARGt) o cripto (`TRON`, `POLYGON`, solo USDT) |
 | `belo_confirm_swap`, `belo_confirm_transfer` | Pasa a `awaiting_approval` y genera `approvalUrl` (`simulado://…`). Confirmar dos veces devuelve el mismo estado |
 
@@ -40,8 +40,8 @@ Para la demo y los tests, cuatro tools que Belo no tiene:
 | Tool | Para qué |
 |---|---|
 | `simulado_aprobar` | La persona aprueba o rechaza en Belo (modo `manual`) |
-| `simulado_configurar` | Cotización USD/ARGt (T09, T11), modo de aprobación (`auto`, `manual`, `rechazo`) y fallo (`timeout`, para T05) |
-| `simulado_ingreso` | Llega un pago en USD |
+| `simulado_configurar` | Cotización USDC/ARGt (T09, T11), modo de aprobación (`auto`, `manual`, `rechazo`) y fallo (`timeout`, para T05) |
+| `simulado_ingreso` | Llega un pago en USDC |
 | `simulado_reiniciar` | Vuelve al estado inicial (botón Reiniciar demo) |
 
 El modo `timeout` ejecuta la operación pero devuelve un error, como si se hubiera perdido la respuesta: la reconciliación tiene que encontrarla con `belo_get_transaction`.

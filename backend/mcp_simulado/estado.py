@@ -21,11 +21,12 @@ APROBACIONES = ("auto", "manual", "rechazo")
 FALLOS = ("ninguno", "timeout")
 # En Belo los pesos argentinos se llaman ARGt; los datos de Sofía y el dominio usan ARS.
 PESOS = "ARGt"
-DESDE_DATOS = {"ARS": PESOS}
+DOLAR = "USDC"  # D18: los dólares de Sofía son USDC (Belo no tiene USD)
+DESDE_DATOS = {"ARS": PESOS, "USD": DOLAR}
 
 # Valores sintéticos de la demo (no son reglas de negocio: esas viven en backend/app/domain/).
 MONEDAS = {
-    "USD": ("Dólar", "fiat", "0.00"),
+    DOLAR: ("USD Coin", "crypto", "0.00"),
     "USDT": ("Tether", "crypto", "4.50"),
     PESOS: ("Peso argentino", "fiat", "0.00"),
 }
@@ -36,7 +37,7 @@ REDES = {
         ("ALIAS", "1000", "5000000", "0"),
     ],
     "USDT": [("BELOTAG", "", "", "0"), ("TRON", "5", "", "2"), ("POLYGON", "1", "", "1")],
-    "USD": [("BELOTAG", "", "", "0")],
+    DOLAR: [("BELOTAG", "", "", "0"), ("POLYGON", "1", "", "1")],
 }
 INTERNAS = {"BELOTAG", "EMAIL", "USER"}
 BANCARIAS = {"CVU", "CBU", "ALIAS"}
@@ -58,6 +59,8 @@ def ahora() -> datetime:
 
 def validar_moneda(codigo: str) -> str:
     """Valida el código de moneda como lo pide Belo."""
+    if codigo == "USD":
+        raise ErrorSimulado("Moneda desconocida: USD. En Belo los dólares son USDC o USDT.")
     if codigo == "ARS":
         raise ErrorSimulado(f"Moneda desconocida: ARS. Los pesos argentinos se llaman {PESOS}.")
     return codigo
@@ -234,7 +237,7 @@ class Estado:
     def boveda(self) -> dict:
         return {
             "id": "1",
-            "currencyCode": "USD",
+            "currencyCode": DOLAR,
             "details": {
                 "name": "Impuestos",
                 "icon": None,
@@ -249,9 +252,9 @@ class Estado:
 
     def precio(self, par: str) -> Decimal:
         precios = {
-            f"USD/{PESOS}": self.fx_usd_ars,
+            f"{DOLAR}/{PESOS}": self.fx_usd_ars,
             f"USDT/{PESOS}": self.fx_usd_ars,
-            "USDT/USD": Decimal("1"),
+            f"USDT/{DOLAR}": Decimal("1"),
         }
         if par not in precios:
             raise ErrorSimulado(f"Par no disponible: {par}. Pares: {', '.join(precios)}")
@@ -369,14 +372,14 @@ class Estado:
 
     def ingreso(self, monto: str, contraparte: str) -> dict:
         q = dec(monto)
-        self.saldos["USD"] += q
+        self.saldos[DOLAR] += q
         momento = ahora().isoformat()
         mov = {
             "id": f"dep-{uuid.uuid4().hex[:8]}",
             "type": "deposit",
             "status": "success",
             "amount": texto(q),
-            "currency": "USD",
+            "currency": DOLAR,
             "metadata": {"simulado": True},
             "receipt": _recibo({}, contraparte),
             "approval": None,
