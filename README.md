@@ -90,7 +90,7 @@ Los nombres exactos de las tools y sus parámetros se documentan en `docs/belo-m
 | Frontend | React + TypeScript |
 | Datos | SQLite |
 | Integración | MCP V1 de Belo detrás de `BeloPort` |
-| Despliegue | Docker Compose en un droplet de DigitalOcean, con Caddy (HTTPS), dominio en Cloudflare y GitHub Actions |
+| Despliegue | Docker Compose en un droplet de DigitalOcean, Cloudflare Tunnel (HTTPS) en <https://cfo.pruebassite.com> e imagen publicada por GitHub Actions en ghcr.io |
 
 Detalle de cada elección, quién hace qué y el plan hora a hora en [`docs/ruta-de-trabajo.md`](docs/ruta-de-trabajo.md).
 
@@ -126,7 +126,7 @@ Cada carpeta tiene un `README.md` con su responsabilidad y lo que se va a constr
 
 ## Cómo correrlo
 
-**Demo en línea:** _enlace pendiente; se publica el viernes 27 por la noche y se actualiza con cada merge a `main`._ En la versión pública todo lo que mueve dinero corre contra el mock (SIMULATED), y el botón **Reiniciar demo** vuelve al estado inicial.
+**Demo en línea:** <https://cfo.pruebassite.com> (por ahora, página provisional; se actualiza sola con cada merge a `main`). En la versión pública todo lo que mueve dinero corre contra el mock (SIMULATED), y el botón **Reiniciar demo** vuelve al estado inicial.
 
 > Se completa durante el hackathon. El flujo previsto es:
 

@@ -1,0 +1,24 @@
+# CFO Agéntico · despliegue en el droplet compartido (ver deploy/README.md).
+# En el servidor vive en ~/srv/cfo-agentico/docker-compose.yml, junto a su .env (permisos 600).
+# El temporizador cfo-actualizar trae la imagen nueva cada 2 minutos.
+name: cfo-agentico
+services:
+  app:
+    image: ${CFO_IMAGEN:-ghcr.io/ingrevelo/cfo-agentico:latest}
+    restart: unless-stopped
+    env_file: [.env]
+    # Solo dentro del servidor: la única entrada es el túnel de Cloudflare.
+    # Docker se salta UFW con los puertos publicados, por eso va atado a 127.0.0.1.
+    ports: ["127.0.0.1:8095:8080"]
+    read_only: true
+    tmpfs: [/tmp]
+    mem_limit: 512m
+    cpus: 1.0
+    security_opt: ["no-new-privileges:true"]
+    cap_drop: [ALL]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/api/salud', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
