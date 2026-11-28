@@ -18,7 +18,7 @@ Registro corto de lo que decidimos, lo que falta decidir y lo que hay que pregun
 | D10 | **Badge SIMULATED** para todo lo que no corra en vivo | Nunca fingir una operación real |
 | D11 | **Perfilado en modo sombra:** el código detecta patrones, el LLM los interpreta y la persona confirma | Le da al agente un rol que no se resuelve con un `if` y convierte el onboarding en confirmar en lugar de escribir reglas |
 | D12 | **Monedas genéricas:** cada obligación se convierte a la moneda en que vence | El producto sirve para ARS, BRL, COP, CLP o MXN; la demo usa USD→ARS |
-| D13 | **Dos aprobaciones:** la persona aprueba el plan en CFO Agéntico, y cada movimiento real se aprueba en el link de Belo con el código que llega por correo | Así funciona el MCP de Belo: sin ese código no se ejecuta nada. El link vence a los 15 minutos |
+| D13 | **Dos aprobaciones:** la persona aprueba el plan en CFO Agéntico, y cada movimiento real se aprueba en Belo: en su cuenta propia, con la notificación de la app de Belo; si no, en un enlace de Belo | Así funciona el MCP de Belo: `belo_confirm_*` no ejecuta nada hasta esa aprobación. El enlace vence a los 15 minutos |
 | D14 | **La autonomía ganada nunca salta el código de Belo:** subir de nivel significa que el agente prepara y envía la operación sin preguntar en nuestra app | Belo exige el código en toda operación que mueve dinero; el pitch no puede prometer que el agente mueve dinero solo |
 | D15 | **El alquiler se puede pagar con una transferencia real** (CBU o alias); **apartar en alcancías sigue SIMULATED** | El MCP permite transferir a terceros, pero las alcancías solo se consultan |
 | D16 | **La URL pública no usa el MCP real.** Lo en vivo se muestra desde el portátil de quien presenta, con un solo movimiento de monto chico | El login es interactivo y con una cuenta real, Belo pide montos chicos y las llamadas desde servidores no conectan |
@@ -37,15 +37,15 @@ Propuestas y recomendaciones en [`ruta-de-trabajo.md`](ruta-de-trabajo.md#decisi
 
 ## Preguntas para los mentores de Belo
 
-Actualizadas el 27-nov con la [guía de conexión del MCP](https://app.notion.com/p/belo/belo-para-agentes-c-mo-conectar-el-MCP-hackathon-27-11-424b23cb6b46819cb3b9edbc2057bb49). Las preguntas 2 a 5 ya tienen respuesta con la [lista de tools](belo-mcp/tools.md); la 1 sigue urgente.
+Actualizadas el 27-nov con la [guía de conexión del MCP](https://app.notion.com/p/belo/belo-para-agentes-c-mo-conectar-el-MCP-hackathon-27-11-424b23cb6b46819cb3b9edbc2057bb49). Las preguntas 1 a 5 y la 7 ya tienen respuesta con la [lista de tools](belo-mcp/tools.md) y la conexión real del 28-nov.
 
-1. **Cloudflare responde 403 a nuestro cliente MCP en Python** (SDK oficial `mcp`), incluso en el descubrimiento de OAuth. ¿Pueden habilitar clientes propios, o el MCP solo admite Claude, Cursor, VS Code, Codex y ChatGPT de escritorio?
+1. ~~¿Cloudflare bloquea nuestro cliente MCP en Python?~~ **Resuelta el 28-nov:** el 403 era solo en el registro automático del cliente. Registrando un cliente a mano en `https://bifrost.belo.app/oauth/register` (dato que compartió otro equipo), Claude Code y nuestro script en Python se conectan y listan las 18 tools. Detalle en [`ruta-de-trabajo.md`](ruta-de-trabajo.md#el-mcp-de-belo).
 2. ~~¿Nombres y parámetros de las tools?~~ **Respondida:** 18 tools `belo_*` en [`belo-mcp/tools.md`](belo-mcp/tools.md). Sigue abierto: ¿pueden compartir respuestas de ejemplo?
 3. ~~¿Tool de rendimiento?~~ **Respondida:** no hay una tool aparte; `belo_get_balances` trae `yield.rate` y lo ganado por moneda. El excedente queda en USDT y mostramos su rendimiento con ese dato.
 4. ~~¿Mover dinero a una alcancía?~~ **Respondida:** no; las bóvedas solo se consultan (`belo_list_vaults`, `belo_get_vault`). Confirma D15.
 5. ~~¿Cómo se entera el agente de la aprobación?~~ **Respondida:** `belo_confirm_*` deja la transacción en `awaiting_approval` (notificación en la app de Belo, o un enlace). Con `waitForApproval` la tool espera; si no, se consulta `belo_get_transaction` hasta `success` o `failed`.
 6. ¿Las operaciones son siempre reales, o hay saldo de prueba? ¿Qué monto mínimo recomiendan?
-7. ¿La conversión o la transferencia aceptan una referencia o clave de idempotencia?
+7. ~~¿Clave de idempotencia?~~ **Respondida:** no se pasa ninguna; confirmar la deriva de la transacción. Repetir un confirm es seguro, pero devuelve la respuesta original: después de un timeout se consulta `belo_get_transaction`.
 8. ¿Se puede aprobar un plan con varios movimientos en un solo link?
 9. ¿Los movimientos permiten detectar ingresos nuevos casi en tiempo real, o hay webhooks?
 10. ¿Cómo funcionan las comisiones o spreads entre monedas latinoamericanas y dólares digitales?

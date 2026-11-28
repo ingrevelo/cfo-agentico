@@ -83,12 +83,18 @@ Belo publicó el MCP el 27 de noviembre ([guía de conexión](https://app.notion
 | Desde servidores | ChatGPT web y Grok no conectan porque "llaman desde sus servidores" | La URL pública no usa el MCP real (D16) |
 | Nombres de las tools | La guía no los lista | Se obtienen con `backend/scripts/listar_tools_belo.py` o desde un cliente MCP (ver abajo) |
 
-**Hallazgo del 27-nov:** el SDK de Python (`mcp` 2.3) recibe **403 de Cloudflare** en `https://b2b.belo.app/mcp`, incluso en el descubrimiento de OAuth, antes de llegar al login. Los clientes que Belo documenta (Claude, Cursor, VS Code, Codex) sí conectan. No intentamos saltar ese bloqueo: se lo preguntamos a Belo (pregunta 1 de [`decisiones.md`](decisiones.md)). Mientras tanto, la lista de tools se obtiene conectando Claude Code como indica la guía:
+**Conexión resuelta el 28-nov.** El 403 de Cloudflare era solo en el registro automático del cliente (`/.well-known/...` y el registro dinámico). El servidor OAuth real es `https://bifrost.belo.app` y acepta registrar un cliente a mano. Con ese `client_id`, Claude Code quedó **Connected** y `backend/scripts/listar_tools_belo.py` obtuvo las 18 tools con el SDK oficial de Python, sin saltar ningún bloqueo. Cada persona que quiera conectarse en vivo hace esto una vez:
 
-```bash
-claude mcp add --transport http belo https://b2b.belo.app/mcp
-# luego, dentro de Claude Code: /mcp → belo → autenticar, y pedir la lista de tools con sus parámetros
+```powershell
+# 1. Registrar un cliente público (una sola vez por persona):
+curl.exe -s -X POST https://bifrost.belo.app/oauth/register -H "content-type: application/json" -d '{\"client_name\":\"CFO Agentico\",\"redirect_uris\":[\"http://localhost:33418/callback\"],\"grant_types\":[\"authorization_code\",\"refresh_token\"],\"response_types\":[\"code\"],\"token_endpoint_auth_method\":\"none\"}'
+# 2. Claude Code con ese client_id:
+claude mcp add --transport http --client-id <client_id> --callback-port 33418 belo https://b2b.belo.app/mcp
+# 3. Nuestro cliente en Python (lista las tools; deja los tokens en ~/.cfo-agentico/):
+$env:BELO_CLIENT_ID = "<client_id>"; uv run backend/scripts/listar_tools_belo.py
 ```
+
+El `client_id` no es secreto (el cliente es público y no tiene contraseña), pero los tokens sí: viven en `~/.cfo-agentico/` y nunca entran al repositorio ni al droplet. En el login de Belo se deja marcado solo "Consultar", salvo para el único movimiento real de la demo.
 
 Las capas detrás de `BeloPort` quedan así:
 
@@ -164,7 +170,7 @@ Fuera del repo: deck, video de respaldo, publicaciones de Construye en Público 
 | `agent/aprobacion-ejecucion` | `human_approval → execute_and_audit`: OK del plan, cotizar y confirmar en Belo, esperar `success` o `failed` con `belo_get_transaction`, y MCP Log | 3 | T03, T06 (de punta a punta) | Juan Carlos |
 | `api/endpoints-reales` | Reglas, planes, aprobar, log, avanzar reloj y `POST /api/demo/reiniciar` | 3 | — | Juan Carlos |
 | `front/cliente-api` | Tipos generados del OpenAPI y conexión de las pantallas a la API real | 3 | — | Julia |
-| `adapter/live-belo` | `LiveBeloMCPAdapter` contra `https://b2b.belo.app/mcp`: OAuth (reutiliza el login de `listar_tools_belo.py`), lecturas y un movimiento de monto chico | 3, si Belo habilita nuestro cliente | Prueba manual desde el portátil | Vanessa |
+| `adapter/live-belo` | `LiveBeloMCPAdapter` contra `https://b2b.belo.app/mcp`: OAuth (reutiliza el login de `listar_tools_belo.py`), lecturas y un movimiento de monto chico | 3 (la conexión ya funciona) | Prueba manual desde el portátil | Vanessa |
 | `agent/perfilado` | `profile_patterns`: el LLM nombra los patrones y redacta las reglas propuestas | 4 | T12 (con Juan Carlos) | Juan Carlos |
 
 #### Juan Carlos · Software, IA aplicada, datos y ciberseguridad
@@ -303,7 +309,7 @@ En este orden, de lo primero que se sacrifica a lo último:
 | El despliegue falla a última hora | La URL existe desde el viernes y cada merge se despliega. Cada imagen queda etiquetada con su commit: volver atrás es cambiar la etiqueta y correr `docker compose up -d` |
 | El droplet se cae o se queda sin memoria | Reinicio automático y límite de memoria en Compose; demo local y video de respaldo. Cesar tiene acceso a la consola de DigitalOcean |
 | Dos jurados prueban al mismo tiempo | Botón Reiniciar demo y estado inicial sembrado en cada arranque |
-| Cloudflare sigue bloqueando nuestro cliente MCP | Todo corre contra el mock y el MCP simulado. Lo en vivo se muestra desde un cliente que Belo sí acepta (Claude Desktop o Claude Code con el conector de Belo), y lo demás lleva el sello SIMULATED (D10) |
+| Belo vuelve a bloquear el registro o cambia el OAuth | Todo corre contra el mock y el MCP simulado. Lo en vivo se muestra desde Claude Code o el conector de claude.ai, y lo demás lleva el sello SIMULATED (D10) |
 | El link de aprobación vence o el código tarda en la demo | Un solo movimiento real, de monto chico; el resto en el mock |
 | El LLM falla o tarda | Textos de plantilla por cada uso del LLM y video de respaldo |
 | Dos personas tocan el mismo archivo | Dueños por carpeta, una rama por tarea y PR cortos |

@@ -16,6 +16,6 @@ Contratos que el dominio usa para hablar con el exterior.
 
 Las tools de Pix, contactos y direcciones de depósito no entran en la demo. `move_to_pocket` sigue SIMULATED: el MCP no permite mover dinero a las bóvedas.
 
-Los nombres de las tools y de sus campos se traducen en un solo archivo del adaptador. Los montos viajan como texto decimal y se convierten a `Decimal`.
+Los nombres de las tools y de sus campos se traducen en un solo archivo del adaptador. Los montos viajan como texto decimal y se convierten a `Decimal`. Los pesos argentinos se llaman `ARGt` en Belo (el dominio usa `ARS`): esa traducción también vive en el adaptador.
 
 El contrato propuesto está en el anexo A1 de [`docs/caso-de-prueba.md`](../../../docs/caso-de-prueba.md). Cada resultado de escritura indica si fue `live` o simulado, para mostrar el badge SIMULATED.
