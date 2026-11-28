@@ -38,8 +38,9 @@ def test_t12_detecta_exactamente_los_4_patrones_de_sofia_sin_aplicar_reglas() ->
         "Inmobiliaria Palermo SRL",
         "ARCA",
         "Northwind Studio LLC",
-        "Banco local (CBU propio)",
     }
+    assert [p.contraparte for p in resultado.pasamanos] == ["Banco local (CBU propio)"]
+    assert resultado.pasamanos[0].monto_mediana == Decimal("1400.00")
 
     alquiler = contrapartes["Inmobiliaria Palermo SRL"]
     assert alquiler.patron.monto_mediana == Decimal("450000.00")
