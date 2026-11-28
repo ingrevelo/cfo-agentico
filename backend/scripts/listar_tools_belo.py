@@ -65,7 +65,11 @@ COMPLETO = Path.home() / ".cfo-agentico" / "belo-mcp-completo.json"
 def _estructura(valor):
     """Quita los textos descriptivos y deja nombres, tipos, enums y campos obligatorios."""
     if isinstance(valor, dict):
-        return {k: _estructura(v) for k, v in valor.items() if k not in ("description", "title")}
+        return {
+            k: ({c: _estructura(x) for c, x in v.items()} if k == "properties" else _estructura(v))
+            for k, v in valor.items()
+            if k not in ("description", "title")
+        }
     if isinstance(valor, list):
         return [_estructura(v) for v in valor]
     return valor
@@ -208,6 +212,7 @@ async def main() -> None:
             "name": t["name"],
             "annotations": t.get("annotations", {}),
             "inputSchema": _estructura(t.get("inputSchema", {})),
+            "outputSchema": _estructura(t.get("outputSchema", {})),
         }
         for t in tools
     ]

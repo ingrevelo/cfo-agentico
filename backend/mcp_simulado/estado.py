@@ -1,6 +1,7 @@
 """Estado en memoria del MCP simulado: saldos, cotizaciones y transacciones de Sofía.
 
-Montos con `Decimal` y expuestos como texto decimal, igual que el MCP de Belo.
+Las respuestas tienen la misma forma que los `outputSchema` reales de Belo
+(`docs/belo-mcp/tools.json`). Montos con `Decimal`, expuestos como texto decimal.
 Las cotizaciones vencen a los 15 minutos. Confirmar deja la transacción en
 `awaiting_approval`; el modo de aprobación decide qué pasa después.
 """
@@ -23,14 +24,19 @@ PESOS = "ARGt"
 DESDE_DATOS = {"ARS": PESOS}
 
 # Valores sintéticos de la demo (no son reglas de negocio: esas viven en backend/app/domain/).
-RENDIMIENTO_ANUAL = {"USDT": Decimal("0.045")}
+MONEDAS = {
+    "USD": ("Dólar", "fiat", "0.00"),
+    "USDT": ("Tether", "crypto", "4.50"),
+    PESOS: ("Peso argentino", "fiat", "0.00"),
+}
 REDES = {
-    PESOS: [{"network": "CVU/CBU/ALIAS", "min": "1000", "max": "5000000", "fee": "0"}],
-    "USDT": [
-        {"network": "TRON", "min": "5", "max": "10000", "fee": "1"},
-        {"network": "POLYGON", "min": "1", "max": "10000", "fee": "0.5"},
+    PESOS: [
+        ("CVU", "1000", "5000000", "0"),
+        ("CBU", "1000", "5000000", "0"),
+        ("ALIAS", "1000", "5000000", "0"),
     ],
-    "USD": [{"network": "BELO (interna)", "min": "1", "max": "10000", "fee": "0"}],
+    "USDT": [("BELOTAG", "", "", "0"), ("TRON", "5", "", "2"), ("POLYGON", "1", "", "1")],
+    "USD": [("BELOTAG", "", "", "0")],
 }
 INTERNAS = {"BELOTAG", "EMAIL", "USER"}
 BANCARIAS = {"CVU", "CBU", "ALIAS"}
@@ -71,6 +77,39 @@ def texto(d: Decimal) -> str:
     return str(d.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
 
 
+def _recibo(
+    debitos: dict,
+    contraparte: str | None = None,
+    conversion: dict | None = None,
+    comision: Decimal | None = None,
+    moneda_comision: str | None = None,
+) -> dict:
+    """`receipt` con la forma real de Belo."""
+    return {
+        "counterparty": None
+        if contraparte is None
+        else {
+            "name": contraparte,
+            "bank": None,
+            "belotag": None,
+            "account": None,
+            "accountType": None,
+        },
+        "debits": [{"currency": c, "amount": texto(m)} for c, m in debitos.items()],
+        "netAmount": None,
+        "netCurrency": None,
+        "fee": None if comision is None else texto(comision),
+        "feeCurrency": moneda_comision,
+        "taxes": None,
+        "taxCurrency": None,
+        "conversion": conversion,
+        "network": None,
+        "transactionHash": None,
+        "explorerUrl": None,
+        "bankReference": None,
+    }
+
+
 @dataclass
 class Transaccion:
     id: str
@@ -82,18 +121,65 @@ class Transaccion:
     creditos: dict[str, Decimal]
     comision: Decimal
     detalle: dict = field(default_factory=dict)
+    aprobacion: dict | None = None
+    actualizada: datetime | None = None
 
-    def vista(self) -> dict:
+    # -------------------------------------------------------------- vistas con forma real
+    def vista_cotizacion(self) -> dict:
+        if self.tipo == "swap":
+            d = self.detalle
+            return {
+                "id": self.id,
+                "status": self.estado,
+                "pairCode": d["pairCode"],
+                "type": d["type"],
+                "price": d["price"],
+                "baseAmount": d["baseAmount"],
+                "quoteAmount": d["quoteAmount"],
+                "expiresAt": self.vence.isoformat(),
+            }
+        d = self.detalle
+        return {
+            "id": self.id,
+            "status": self.estado,
+            "address": d["address"],
+            "addressType": d["addressType"],
+            "currency": d["currency"],
+            "amount": d["amount"],
+            "fee": texto(self.comision),
+            "exchangeRate": None,
+            "expiresAt": self.vence.isoformat(),
+            "debits": [{"currency": c, "amount": texto(m)} for c, m in self.debitos.items()],
+        }
+
+    def vista_confirmacion(self) -> dict:
+        vence = (self.aprobacion or {}).get("expiresAt")
+        return {"id": self.id, "status": self.estado, "approvalExpiresAt": vence}
+
+    def vista_transaccion(self) -> dict:
+        moneda, monto = next(iter(self.debitos.items()))
+        d = self.detalle
+        conversion = None
+        if self.tipo == "swap":
+            conversion = {
+                "pairCode": d["pairCode"],
+                "type": d["type"],
+                "price": d["price"],
+                "baseAmount": d["baseAmount"],
+                "quoteAmount": d["quoteAmount"],
+            }
+        contraparte = d.get("address") if self.tipo == "transfer" else None
         return {
             "id": self.id,
             "type": self.tipo,
             "status": self.estado,
+            "amount": texto(monto),
+            "currency": moneda,
+            "metadata": {"simulado": True},
+            "receipt": _recibo(self.debitos, contraparte, conversion, self.comision, moneda),
+            "approval": self.aprobacion,
             "createdAt": self.creada.isoformat(),
-            "expiresAt": self.vence.isoformat(),
-            "debits": [{"currency": c, "amount": texto(m)} for c, m in self.debitos.items()],
-            "credits": [{"currency": c, "amount": texto(m)} for c, m in self.creditos.items()],
-            "fee": texto(self.comision),
-            **self.detalle,
+            "updatedAt": (self.actualizada or self.creada).isoformat(),
         }
 
 
@@ -116,6 +202,51 @@ class Estado:
         self.historial = [self._desde_historial(m) for m in hist["movimientos"]]
 
     # ------------------------------------------------------------------ lecturas
+    def saldos_vista(self) -> dict:
+        data = []
+        for moneda, monto in self.saldos.items():
+            nombre, tipo, tasa = MONEDAS[moneda]
+            data.append(
+                {
+                    "currencyCode": moneda,
+                    "name": nombre,
+                    "type": tipo,
+                    "decimals": 2,
+                    "available": texto(monto),
+                    "earned": {"total": "0.00", "today": "0.00", "month": "0.00"},
+                    "yield": {"rate": tasa},
+                }
+            )
+        return {"data": data}
+
+    def redes(self, moneda: str) -> dict:
+        validar_moneda(moneda)
+        if moneda not in REDES:
+            raise ErrorSimulado(f"Moneda sin redes de envío: {moneda}")
+        return {
+            "currency": moneda,
+            "networks": [
+                {"addressType": t, "minAmount": mn, "maxAmount": mx, "fee": f, "available": True}
+                for t, mn, mx, f in REDES[moneda]
+            ],
+        }
+
+    def boveda(self) -> dict:
+        return {
+            "id": "1",
+            "currencyCode": "USD",
+            "details": {
+                "name": "Impuestos",
+                "icon": None,
+                "cover": None,
+                "description": None,
+                "goalAmount": None,
+            },
+            "balance": texto(self.boveda_impuestos),
+            "isYieldActive": False,
+            "rate": "0.00",
+        }
+
     def precio(self, par: str) -> Decimal:
         precios = {
             f"USD/{PESOS}": self.fx_usd_ars,
@@ -128,7 +259,9 @@ class Estado:
 
     def movimientos(self) -> list[dict]:
         hechas = [
-            self._a_movimiento(t) for t in self.transacciones.values() if t.estado == "success"
+            t.vista_transaccion()
+            for t in self.transacciones.values()
+            if t.estado in ("success", "pending", "awaiting_approval", "failed")
         ]
         return sorted(self.historial + hechas, key=lambda m: m["createdAt"], reverse=True)
 
@@ -155,15 +288,21 @@ class Estado:
             debitos, creditos = {base: monto_base}, {cotizada: monto_cot}
         else:
             raise ErrorSimulado("type debe ser BUY o SELL")
-        return self._nueva(
-            "swap", debitos, creditos, Decimal("0"), {"pairCode": par, "price": str(p)}
-        )
+        detalle = {
+            "pairCode": par,
+            "type": tipo,
+            "price": str(p),
+            "baseAmount": texto(monto_base),
+            "quoteAmount": texto(monto_cot),
+        }
+        return self._nueva("swap", debitos, creditos, Decimal("0"), detalle)
 
     def cotizar_transferencia(
         self, direccion: str, tipo_dir: str, moneda: str, monto: str
     ) -> Transaccion:
         validar_moneda(moneda)
         q = dec(monto)
+        redes = {t: Decimal(f) for t, _, _, f in REDES.get(moneda, [])}
         if tipo_dir in INTERNAS:
             comision = Decimal("0")
         elif tipo_dir in BANCARIAS:
@@ -172,13 +311,10 @@ class Estado:
                     f"Los retiros a banco solo existen para pesos argentinos ({PESOS})"
                 )
             comision = Decimal("0")
-        elif moneda == "USDT":
-            redes = {r["network"]: Decimal(r["fee"]) for r in REDES["USDT"]}
-            if tipo_dir not in redes:
-                raise ErrorSimulado(f"Red no disponible para USDT: {tipo_dir}")
+        elif tipo_dir in redes:
             comision = redes[tipo_dir]
         else:
-            raise ErrorSimulado(f"Tipo de dirección no disponible: {tipo_dir}")
+            raise ErrorSimulado(f"Red no disponible para {moneda}: {tipo_dir}")
         detalle = {
             "address": direccion,
             "addressType": tipo_dir,
@@ -192,12 +328,13 @@ class Estado:
         t = self.buscar(transaction_id)
         if t.tipo != tipo:
             raise ErrorSimulado(f"La transacción {transaction_id} es de tipo {t.tipo}, no {tipo}")
-        if t.estado != "quoted":  # idempotente: confirmar dos veces devuelve el mismo estado
+        if t.estado != "quoted":  # idempotente: repetir devuelve la misma transacción
             return t
         if ahora() > t.vence:
             raise ErrorSimulado("La cotización venció. Pide una nueva.")
         t.estado = "awaiting_approval"
-        t.detalle["approvalUrl"] = f"simulado://aprobar/{t.id}"
+        t.aprobacion = {"status": "pending", "expiresAt": (ahora() + VENCE_EN).isoformat()}
+        t.actualizada = ahora()
         if self.aprobacion == "auto":
             self.resolver(t.id, aprobar=True)
         elif self.aprobacion == "rechazo":
@@ -212,12 +349,16 @@ class Estado:
         t = self.buscar(transaction_id)
         if t.estado != "awaiting_approval":
             return t
+        t.actualizada = ahora()
         if not aprobar:
-            t.estado, t.detalle["reason"] = "failed", "rechazada por la persona"
+            t.estado = "failed"
+            t.aprobacion = {**(t.aprobacion or {}), "status": "rejected"}
             return t
+        t.aprobacion = {**(t.aprobacion or {}), "status": "approved"}
         faltan = [c for c, m in t.debitos.items() if self.saldos.get(c, Decimal(0)) < m]
         if faltan:
-            t.estado, t.detalle["reason"] = "failed", f"saldo insuficiente en {', '.join(faltan)}"
+            t.estado = "failed"
+            t.detalle["reason"] = f"saldo insuficiente en {', '.join(faltan)}"
             return t
         for c, m in t.debitos.items():
             self.saldos[c] -= m
@@ -229,13 +370,18 @@ class Estado:
     def ingreso(self, monto: str, contraparte: str) -> dict:
         q = dec(monto)
         self.saldos["USD"] += q
+        momento = ahora().isoformat()
         mov = {
             "id": f"dep-{uuid.uuid4().hex[:8]}",
             "type": "deposit",
-            "currency": "USD",
+            "status": "success",
             "amount": texto(q),
-            "createdAt": ahora().isoformat(),
-            "receipt": {"counterparty": contraparte},
+            "currency": "USD",
+            "metadata": {"simulado": True},
+            "receipt": _recibo({}, contraparte),
+            "approval": None,
+            "createdAt": momento,
+            "updatedAt": momento,
         }
         self.historial.append(mov)
         return mov
@@ -258,25 +404,19 @@ class Estado:
         self.transacciones[t.id] = t
         return t
 
-    def _a_movimiento(self, t: Transaccion) -> dict:
-        moneda, monto = next(iter(t.debitos.items()))
-        return {
-            "id": t.id,
-            "type": t.tipo,
-            "currency": moneda,
-            "amount": texto(monto),
-            "createdAt": t.creada.isoformat(),
-            "receipt": t.vista(),
-        }
-
     @staticmethod
     def _desde_historial(m: dict) -> dict:
+        momento = f"{m['fecha']}T12:00:00+00:00"
+        moneda = DESDE_DATOS.get(m["moneda"], m["moneda"])
         return {
             "id": m["id"],
             "type": TIPOS_HISTORIAL.get(m["tipo"], "transfer"),
-            "currency": DESDE_DATOS.get(m["moneda"], m["moneda"]),
+            "status": "success",
             "amount": texto(Decimal(str(m["monto"]))),
-            "createdAt": f"{m['fecha']}T12:00:00+00:00",
+            "currency": moneda,
             "metadata": {"tipoOriginal": m["tipo"], "description": m["descripcion"]},
-            "receipt": {"counterparty": m["contraparte"]},
+            "receipt": _recibo({}, m["contraparte"]),
+            "approval": None,
+            "createdAt": momento,
+            "updatedAt": momento,
         }

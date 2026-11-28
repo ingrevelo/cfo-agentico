@@ -48,22 +48,20 @@ async def main() -> None:
 
         print("\nLecturas")
         ok, b = await llamar(s, "belo_get_balances")
-        usd = next(x for x in b["balances"] if x["currency"] == "USD")
+        usd = next(x for x in b["data"] if x["currencyCode"] == "USD")
         revisar(
             ok and b["simulado"] and usd["available"] == "1500.00",
             "saldo inicial USD 1500.00, marcado como simulado",
         )
         ok, t = await llamar(s, "belo_list_transactions", limit=5)
         revisar(
-            ok and t["total"] == 43 and len(t["transactions"]) == 5,
+            ok and t["pagination"]["total"] == 43 and len(t["data"]) == 5,
             "historial de 43 movimientos, paginado",
         )
         ok, t = await llamar(s, "belo_list_transactions", type="deposit", **{"from": "2026-11-01"})
-        revisar(
-            ok and all(m["type"] == "deposit" for m in t["transactions"]), "filtros type y from"
-        )
+        revisar(ok and all(m["type"] == "deposit" for m in t["data"]), "filtros type y from")
         ok, v = await llamar(s, "belo_list_vaults")
-        revisar(ok and v["vaults"][0]["name"] == "Impuestos", "bóveda Impuestos")
+        revisar(ok and v["data"][0]["details"]["name"] == "Impuestos", "bóveda Impuestos")
 
         print("\nPlan: USD 900 → USDT (aprobación automática)")
         ok, q = await llamar(
@@ -82,7 +80,7 @@ async def main() -> None:
             ok and c2["status"] == "success", "confirmar dos veces no repite el movimiento (T06)"
         )
         ok, b = await llamar(s, "belo_get_balances")
-        saldos = {x["currency"]: x["available"] for x in b["balances"]}
+        saldos = {x["currencyCode"]: x["available"] for x in b["data"]}
         revisar(
             saldos["USD"] == "600.00" and saldos["USDT"] == "900.00", "USD 600.00 y USDT 900.00"
         )
@@ -127,7 +125,7 @@ async def main() -> None:
         ok, e = await llamar(s, "belo_get_transfer_networks", currency="ARS")
         revisar(not ok and "ARGt" in e, "ARS se rechaza y sugiere ARGt")
         ok, b = await llamar(s, "belo_get_balances")
-        revisar(ok and any(x["currency"] == "ARGt" for x in b["balances"]), "saldos con ARGt")
+        revisar(ok and any(x["currencyCode"] == "ARGt" for x in b["data"]), "saldos con ARGt")
         await llamar(s, "simulado_configurar", aprobacion="auto", fallo="timeout")
         ok, q = await llamar(
             s,

@@ -4,6 +4,10 @@ Lista obtenida el 27-nov-2026 con el permiso **"Consultar"** y **verificada cont
 
 Son **18 tools** en cuatro grupos. Los montos viajan como **texto decimal** (por ejemplo `"150.00"`). **Los pesos argentinos se llaman `ARGt`**, no `ARS` (por ejemplo, el par `USDT/ARGt`).
 
+**Monedas reales (lectura del 28-nov con `LiveBeloMCPAdapter`):** `USDT`, `USDC`, `ARGt`, `BRAt`, `COLt`, `MEXt`, `CHLt`, `PERt`, `BOLt`, `BTC`, `ETH` y `SOL`. **No hay saldo en `USD`:** en Belo los dólares son dólares digitales (`USDT` o `USDC`). Las redes de envío de `ARGt` son on-chain (`ARBITRUM_ONE`, `BASE`) más `BELOTAG`; el retiro a banco en pesos se cotiza con `belo_preview_transfer` y `addressType` `CVU`, `CBU` o `ALIAS`.
+
+[`tools.json`](tools.json) incluye también el `outputSchema` real de cada tool (la forma exacta de cada respuesta), que usan `LiveBeloMCPAdapter` y el MCP simulado.
+
 ## Solo lectura (11)
 
 | Tool | Qué hace | Parámetros | Permiso |
