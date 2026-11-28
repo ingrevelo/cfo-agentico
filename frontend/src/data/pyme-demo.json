@@ -1,0 +1,76 @@
+{
+  "user_id": "pyme-demo",
+  "_nota": "Datos sintéticos para la demo (perfil consultora/pyme). No corresponden a ninguna empresa ni persona real. Mismo esquema que sofia-demo.json.",
+  "profile": {
+    "name": "Nodo Consultora",
+    "city": "Buenos Aires",
+    "occupation": "Consultora de datos con clientes en EE. UU., Brasil y Europa",
+    "income_currency": "USD"
+  },
+  "balances": {
+    "USD": 6000,
+    "USDT": 0,
+    "alcancia_impuestos_usd": 0,
+    "ARS": 0
+  },
+  "fx_demo": {
+    "USD_ARS": 1185
+  },
+  "hard_rules": {
+    "min_cushion_usd": 2000,
+    "cushion_scope": [
+      "USD",
+      "USDT",
+      "alcancias_usd"
+    ],
+    "max_conversion_usd": 4000,
+    "fx_tolerance_pct": 2.0,
+    "fx_advance_trigger_pct": 2.0,
+    "tax_pct_of_income": 15,
+    "min_liquid_usd": 300,
+    "min_income_trigger_usd": 100,
+    "allowed_currencies": [
+      "USD",
+      "USDT",
+      "USDC",
+      "ARS"
+    ],
+    "idempotency_required": true
+  },
+  "dues": [
+    {
+      "id": "payroll-friday",
+      "label": "Sueldos",
+      "amount": 3000000,
+      "currency": "ARS",
+      "due": "friday"
+    },
+    {
+      "id": "proveedores-friday",
+      "label": "Proveedores",
+      "amount": 1200000,
+      "currency": "ARS",
+      "due": "friday"
+    },
+    {
+      "id": "arca-20",
+      "label": "Impuestos (ARCA)",
+      "amount": 900000,
+      "currency": "ARS",
+      "due_day": 20
+    }
+  ],
+  "autonomy_levels": {
+    "rendimiento_usdt": 3,
+    "apartar_impuestos": 3,
+    "convertir_para_vencimientos": 3,
+    "adelantar_conversion_favorable": 3,
+    "salidas_a_terceros": 1
+  },
+  "soft_preferences": {
+    "risk_profile": "conservador",
+    "explanation_tone": "claro, cercano, sin jerga cripto",
+    "yield_asset": "USDT",
+    "tax_pocket_name": "Impuestos"
+  }
+}

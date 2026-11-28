@@ -1,0 +1,69 @@
+{
+  "user_id": "sofia-demo",
+  "_nota": "Datos sintéticos para la demo. No corresponden a ninguna persona real.",
+  "profile": {
+    "name": "Sofía",
+    "city": "Buenos Aires",
+    "occupation": "Diseñadora freelance",
+    "income_currency": "USD"
+  },
+  "balances": {
+    "USD": 1500,
+    "USDT": 0,
+    "alcancia_impuestos_usd": 0,
+    "ARS": 0
+  },
+  "fx_demo": {
+    "USD_ARS": 1185
+  },
+  "hard_rules": {
+    "min_cushion_usd": 500,
+    "cushion_scope": [
+      "USD",
+      "USDT",
+      "alcancias_usd"
+    ],
+    "max_conversion_usd": 400,
+    "fx_tolerance_pct": 2.0,
+    "fx_advance_trigger_pct": 2.0,
+    "tax_pct_of_income": 8,
+    "min_liquid_usd": 100,
+    "min_income_trigger_usd": 100,
+    "allowed_currencies": [
+      "USD",
+      "USDT",
+      "USDC",
+      "ARS"
+    ],
+    "idempotency_required": true
+  },
+  "dues": [
+    {
+      "id": "rent-thursday",
+      "label": "Alquiler",
+      "amount": 450000,
+      "currency": "ARS",
+      "due": "thursday"
+    },
+    {
+      "id": "monotributo-20",
+      "label": "Monotributo",
+      "amount": 65000,
+      "currency": "ARS",
+      "due_day": 20
+    }
+  ],
+  "autonomy_levels": {
+    "rendimiento_usdt": 3,
+    "apartar_impuestos": 3,
+    "convertir_para_vencimientos": 3,
+    "adelantar_conversion_favorable": 3,
+    "salidas_a_terceros": 1
+  },
+  "soft_preferences": {
+    "risk_profile": "moderado",
+    "explanation_tone": "claro, cercano, sin jerga cripto",
+    "yield_asset": "USDT",
+    "tax_pocket_name": "Impuestos"
+  }
+}

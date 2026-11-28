@@ -1,0 +1,11 @@
+Acá van las imágenes del búho CFO. Los nombres tienen que ser EXACTOS, en minúsculas:
+
+  buho-sprite.png   la hoja de 12 poses (4 columnas x 3 filas, fondo lavanda)
+  buho-hero.png     opcional: el búho solo con los brazos cruzados, para la home
+
+Ojo con Windows: si tenés oculta la extensión de los archivos, al renombrar podés
+terminar con "buho-sprite.png.png". Activá "Extensiones de nombre de archivo" en
+la pestaña Vista del Explorador para verlo.
+
+La app funciona sin estas imágenes: muestra un emoji de búho en su lugar.
+Para revisar que el recorte quede bien alineado, abrí http://localhost:5173/?galeria-buho
