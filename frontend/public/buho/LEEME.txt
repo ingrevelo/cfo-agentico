@@ -1,11 +1,14 @@
-Acá van las imágenes del búho CFO. Los nombres tienen que ser EXACTOS, en minúsculas:
+Imágenes del búho CFO.
 
-  buho-sprite.png   la hoja de 12 poses (4 columnas x 3 filas, fondo lavanda)
-  buho-hero.png     opcional: el búho solo con los brazos cruzados, para la home
+  buho-sprite.webp   la hoja de 12 poses (4 columnas x 3 filas)  1536 x 1024
+  buho-hero.webp     el búho con los brazos cruzados, para la home  1672 x 941
 
-Ojo con Windows: si tenés oculta la extensión de los archivos, al renombrar podés
-terminar con "buho-sprite.png.png". Activá "Extensiones de nombre de archivo" en
-la pestaña Vista del Explorador para verlo.
+Están en WebP con calidad 95: pesan 328 KB y 284 KB, contra los 2,4 MB que
+pesaban en PNG. No se nota la diferencia a simple vista.
+
+Si las reemplazás, mantené las MISMAS medidas en píxeles. El recorte de cada
+pose son coordenadas exactas, anotadas en src/components/buho/poses.ts, porque
+las columnas de la hoja no son parejas (la primera es más ancha).
 
 La app funciona sin estas imágenes: muestra un emoji de búho en su lugar.
-Para revisar que el recorte quede bien alineado, abrí http://localhost:5173/?galeria-buho
+Para revisar el recorte, abrí http://localhost:5173/?galeria-buho

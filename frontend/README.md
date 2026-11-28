@@ -45,24 +45,31 @@ perfilado, Premium y los controles del jurado viven en la **hoja de ajustes (⚙
 | Ejecutando | Muestra la pista: Propuesto → Aprobado → Ejecutando → Completado |
 | Completado | Festeja y abre el detalle del MCP Log |
 
-## El búho: dónde van las imágenes
+## El búho: las imágenes
 
-Las imágenes **no están en el repo**: las guarda Brigitte a mano en `frontend/public/buho/`,
-con estos nombres exactos y en minúsculas:
+Están en el repo, en **WebP** para que la demo cargue rápido desde el celular:
 
 ```
-frontend/public/buho/buho-sprite.png   la hoja de 12 poses (4 columnas x 3 filas)
-frontend/public/buho/buho-hero.png     opcional: el búho con los brazos cruzados, para la home
+frontend/public/buho/buho-sprite.webp   la hoja de 12 poses · 1536 x 1024 · 328 KB
+frontend/public/buho/buho-hero.webp     el búho de la home   · 1672 x 941  · 284 KB
 ```
 
-> Ojo con Windows: si tenés oculta la extensión, podés terminar con `buho-sprite.png.png`.
-> Activá "Extensiones de nombre de archivo" en la pestaña Vista del Explorador.
+Salieron de dos PNG de 2,4 MB cada uno, convertidos a WebP con calidad 95: pesan un 87% menos
+y no se nota la diferencia. Si las reemplazás, **mantené las mismas medidas en píxeles**, porque
+el recorte de cada pose son coordenadas exactas.
 
-**La app funciona sin las imágenes:** muestra un 🦉 en su lugar y el build nunca depende de ellas.
+**La app funciona sin las imágenes:** muestra un 🦉 en su lugar y el build nunca depende de ellas
+(se referencian por URL pública, no con `import`).
 
-Para revisar que el recorte quede alineado: **http://localhost:5173/?galeria-buho** muestra las
-12 poses con su nombre y su celda. Si alguna sale corrida, hay que ajustar `CELDA_RATIO` en
-`src/components/buho/poses.ts` con las medidas reales del PNG.
+### Cómo se recorta cada pose
+
+La hoja **no es una grilla pareja**: la primera columna es más ancha que las otras tres, así que
+cortar en cuartos partía dos búhos al medio. Por eso `src/components/buho/poses.ts` guarda el
+**rectángulo exacto** de cada pose: un cuadrado de 330 x 330 centrado en cada búho. Al ser
+cuadrado y del mismo tamaño para las 12, ninguna se achata ni se ve más grande que otra.
+
+Para revisarlo: **http://localhost:5173/?galeria-buho** muestra las 12 poses con su nombre y sus
+coordenadas. Si cambiás la hoja y alguna sale corrida, hay que volver a medir las coordenadas.
 
 ## Qué es simulado y qué es Premium
 

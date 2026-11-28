@@ -1,11 +1,12 @@
-// El búho CFO: qué pose de la hoja corresponde a cada momento del agente.
+// El búho CFO: qué parte de la hoja corresponde a cada momento del agente.
 //
-// La hoja (frontend/public/buho/buho-sprite.png) tiene 12 poses en 4 columnas x 3 filas:
-//   fila 0: señalando | tablet con gráfico | pensando con "?" | guiño con la lamparita
-//   fila 1: tablita con checklist | guiño señalando | mano de stop | mano en el mentón
-//   fila 2: laptop | taza de café | festejando | brazos cruzados
+// La hoja (frontend/public/buho/buho-sprite.webp) trae 12 poses en 4 columnas x 3 filas,
+// pero las columnas NO son parejas: la primera es más ancha, así que una grilla de
+// cuartos cortaba por el medio de dos búhos. Por eso cada pose guarda su rectángulo
+// exacto en píxeles, medido sobre la imagen.
 //
-// Las imágenes las guarda Brigitte a mano; la app funciona igual si no están.
+// Todos los rectángulos son del mismo tamaño y están centrados en cada búho: así las
+// 12 poses se ven del mismo porte, centradas y sin achatarse.
 
 export type Expresion =
   | 'bienvenida'
@@ -21,30 +22,40 @@ export type Expresion =
   | 'completado'
   | 'reposo';
 
-export const FILAS = 3;
-export const COLUMNAS = 4;
+/** Medidas reales de buho-sprite.webp. */
+export const SPRITE_ANCHO = 1536;
+export const SPRITE_ALTO = 1024;
 
-/** [fila, columna] de cada pose dentro de la hoja. Empieza en 0. */
-export const CELDAS: Record<Expresion, readonly [number, number]> = {
-  bienvenida: [0, 0],
-  plan: [0, 1],
-  dudando: [0, 2],
-  idea: [0, 3],
-  aprobando: [1, 0],
-  belo: [1, 1],
-  bloqueado: [1, 2],
-  revisando: [1, 3],
-  pensando: [2, 0],
-  esperando: [2, 1],
-  completado: [2, 2],
-  reposo: [2, 3],
+/** Lado del recorte. El búho más grande mide 319 x 317 y cada recorte entra en su pasillo. */
+export const LADO = 330;
+
+export interface Recorte {
+  x: number;
+  y: number;
+  ancho: number;
+  alto: number;
+}
+
+const recorte = (x: number, y: number): Recorte => ({ x, y, ancho: LADO, alto: LADO });
+
+/** Esquina superior izquierda del recorte de cada pose, dentro de la hoja. */
+export const RECORTES: Record<Expresion, Recorte> = {
+  bienvenida: recorte(85, 15), // señalando con marcas violetas
+  plan: recorte(424, 18), // tablet con gráfico
+  dudando: recorte(782, 12), // pensando con "?"
+  idea: recorte(1157, 14), // guiño con la lamparita
+  aprobando: recorte(65, 353), // tablita con checklist y lapicera
+  belo: recorte(443, 354), // guiño señalando
+  bloqueado: recorte(814, 354), // mano de stop con marcas rojas
+  revisando: recorte(1161, 354), // mano en el mentón
+  pensando: recorte(76, 684), // laptop
+  esperando: recorte(433, 689), // taza de café
+  completado: recorte(780, 688), // festejando con alas arriba
+  reposo: recorte(1161, 686), // brazos cruzados
 };
 
-/**
- * Ancho de celda dividido alto de celda. Mientras no exista el PNG vale 1;
- * cuando Brigitte guarde la hoja hay que poner la proporción real.
- */
-export const CELDA_RATIO = 1;
+/** Ancho del recorte dividido su alto. Es 1 porque los recortes son cuadrados. */
+export const CELDA_RATIO = LADO / LADO;
 
 /** Texto alternativo por pose, para cuando el búho no es decorativo. */
 export const ALT: Record<Expresion, string> = {
@@ -62,9 +73,9 @@ export const ALT: Record<Expresion, string> = {
   reposo: 'Búho CFO con los brazos cruzados',
 };
 
-export const EXPRESIONES = Object.keys(CELDAS) as Expresion[];
+export const EXPRESIONES = Object.keys(RECORTES) as Expresion[];
 
 /** URL pública de cada imagen. Se arma con la base de Vite, no con un import. */
 export const url = (archivo: string) => `${import.meta.env.BASE_URL}buho/${archivo}`;
-export const SPRITE = () => url('buho-sprite.png');
-export const HERO = () => url('buho-hero.png');
+export const SPRITE = () => url('buho-sprite.webp');
+export const HERO = () => url('buho-hero.webp');

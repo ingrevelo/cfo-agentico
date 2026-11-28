@@ -1,7 +1,7 @@
 // Galería de chequeo: se abre con ?galeria-buho en la URL.
 // Sirve para ver de un vistazo si el recorte de la hoja está bien alineado.
 import Buho from './Buho';
-import { CELDAS, EXPRESIONES } from './poses';
+import { EXPRESIONES, RECORTES } from './poses';
 
 export default function GaleriaBuho() {
   return (
@@ -17,7 +17,7 @@ export default function GaleriaBuho() {
             <Buho expresion={e} tamano={120} className="mx-auto" />
             <p className="mt-2 text-base font-semibold">{e}</p>
             <p className="text-sm text-tinta-suave">
-              fila {CELDAS[e][0]}, columna {CELDAS[e][1]}
+              x {RECORTES[e].x}, y {RECORTES[e].y}
             </p>
           </li>
         ))}
