@@ -6,6 +6,8 @@ Son **18 tools** en cuatro grupos. Los montos viajan como **texto decimal** (por
 
 **Monedas reales (lectura del 28-nov con `LiveBeloMCPAdapter`):** `USDT`, `USDC`, `ARGt`, `BRAt`, `COLt`, `MEXt`, `CHLt`, `PERt`, `BOLt`, `BTC`, `ETH` y `SOL`. **No hay saldo en `USD`:** en Belo los dólares son dólares digitales (`USDT` o `USDC`). Las redes de envío de `ARGt` son on-chain (`ARBITRUM_ONE`, `BASE`) más `BELOTAG`; el retiro a banco en pesos se cotiza con `belo_preview_transfer` y `addressType` `CVU`, `CBU` o `ALIAS`.
 
+**Pares para el plan (prueba del 28-nov, sin confirmar nada):** `belo_preview_swap` con `USDT/USDC`, `USDC/USDT`, `USDC/ARGt` y `USDT/ARGt` respondió "saldo insuficiente"; con una moneda inexistente responde "moneda no soportada". Pero también un par improbable (`COLt/MEXt`) dio "saldo insuficiente": **Belo revisa el saldo antes que el par**, así que con la cuenta vacía no se puede confirmar qué pares existen ni en qué dirección. Para ensayar el movimiento real de la demo hace falta un depósito chico (por ejemplo 5 USDC) y repetir la cotización.
+
 [`tools.json`](tools.json) incluye también el `outputSchema` real de cada tool (la forma exacta de cada respuesta), que usan `LiveBeloMCPAdapter` y el MCP simulado.
 
 ## Solo lectura (11)
