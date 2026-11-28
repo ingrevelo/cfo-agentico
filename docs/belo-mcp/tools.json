@@ -18,6 +18,86 @@
         "type": "object",
         "$schema": "https://json-schema.org/draft/2020-12/schema",
         "properties": {}
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "currencyCode": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "decimals": {
+                  "type": "number"
+                },
+                "available": {
+                  "type": "string"
+                },
+                "earned": {
+                  "type": "object",
+                  "properties": {
+                    "total": {
+                      "type": "string"
+                    },
+                    "today": {
+                      "type": "string"
+                    },
+                    "month": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "total",
+                    "today",
+                    "month"
+                  ],
+                  "additionalProperties": {}
+                },
+                "yield": {
+                  "type": "object",
+                  "properties": {
+                    "rate": {
+                      "type": "string"
+                    },
+                    "extraYield": {
+                      "type": "string"
+                    },
+                    "totalYield": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "rate"
+                  ],
+                  "additionalProperties": {}
+                }
+              },
+              "required": [
+                "currencyCode",
+                "name",
+                "type",
+                "decimals",
+                "available",
+                "earned"
+              ],
+              "additionalProperties": {}
+            }
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
       }
     },
     {
@@ -37,6 +117,39 @@
             "minLength": 1
           }
         }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "currencyCode": {
+                  "type": "string"
+                },
+                "network": {
+                  "type": "string"
+                },
+                "value": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "currencyCode",
+                "network",
+                "value"
+              ],
+              "additionalProperties": {}
+            }
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
       }
     },
     {
@@ -87,6 +200,341 @@
             "maxLength": 16
           }
         }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string"
+                },
+                "status": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "currency": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "metadata": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "propertyNames": {
+                        "type": "string"
+                      },
+                      "additionalProperties": {}
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "receipt": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "counterparty": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "name": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "bank": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "belotag": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "account": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "accountType": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "name",
+                                "bank",
+                                "belotag",
+                                "account",
+                                "accountType"
+                              ],
+                              "additionalProperties": {}
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "debits": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "currency": {
+                                "type": "string"
+                              },
+                              "amount": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "currency",
+                              "amount"
+                            ],
+                            "additionalProperties": {}
+                          }
+                        },
+                        "netAmount": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "netCurrency": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "fee": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "feeCurrency": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "taxes": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "taxCurrency": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "conversion": {
+                          "anyOf": [
+                            {
+                              "type": "object",
+                              "properties": {
+                                "pairCode": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "type": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "price": {
+                                  "type": "string"
+                                },
+                                "baseAmount": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "quoteAmount": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "pairCode",
+                                "type",
+                                "price",
+                                "baseAmount",
+                                "quoteAmount"
+                              ],
+                              "additionalProperties": {}
+                            },
+                            {
+                              "type": "null"
+                            }
+                          ]
+                        },
+                        "network": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "transactionHash": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "explorerUrl": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "bankReference": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "counterparty",
+                        "debits",
+                        "netAmount",
+                        "netCurrency",
+                        "fee",
+                        "feeCurrency",
+                        "taxes",
+                        "taxCurrency",
+                        "conversion",
+                        "network",
+                        "transactionHash",
+                        "explorerUrl",
+                        "bankReference"
+                      ],
+                      "additionalProperties": {}
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "approval": {
+                  "anyOf": [
+                    {
+                      "type": "object",
+                      "properties": {
+                        "status": {
+                          "type": "string"
+                        },
+                        "expiresAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "status",
+                        "expiresAt"
+                      ],
+                      "additionalProperties": {}
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "createdAt": {
+                  "type": "string"
+                },
+                "updatedAt": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "status",
+                "amount",
+                "currency",
+                "metadata",
+                "createdAt",
+                "updatedAt"
+              ],
+              "additionalProperties": {}
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "number"
+              },
+              "limit": {
+                "type": "number"
+              },
+              "currentPage": {
+                "type": "number"
+              },
+              "nextPage": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              },
+              "prevPage": {
+                "type": [
+                  "number",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "total",
+              "limit",
+              "currentPage",
+              "nextPage",
+              "prevPage"
+            ],
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "data",
+          "pagination"
+        ],
+        "additionalProperties": {}
       }
     },
     {
@@ -110,6 +558,294 @@
         "required": [
           "transactionId"
         ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "amount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "currency": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "type": "object",
+                "propertyNames": {
+                  "type": "string"
+                },
+                "additionalProperties": {}
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "receipt": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "counterparty": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "name": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "bank": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "belotag": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "account": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "accountType": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "name",
+                          "bank",
+                          "belotag",
+                          "account",
+                          "accountType"
+                        ],
+                        "additionalProperties": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "debits": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "currency": {
+                          "type": "string"
+                        },
+                        "amount": {
+                          "type": "string"
+                        }
+                      },
+                      "required": [
+                        "currency",
+                        "amount"
+                      ],
+                      "additionalProperties": {}
+                    }
+                  },
+                  "netAmount": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "netCurrency": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "fee": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "feeCurrency": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "taxes": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "taxCurrency": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "conversion": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "properties": {
+                          "pairCode": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "type": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "price": {
+                            "type": "string"
+                          },
+                          "baseAmount": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "quoteAmount": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "pairCode",
+                          "type",
+                          "price",
+                          "baseAmount",
+                          "quoteAmount"
+                        ],
+                        "additionalProperties": {}
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "network": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "transactionHash": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "explorerUrl": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  },
+                  "bankReference": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "counterparty",
+                  "debits",
+                  "netAmount",
+                  "netCurrency",
+                  "fee",
+                  "feeCurrency",
+                  "taxes",
+                  "taxCurrency",
+                  "conversion",
+                  "network",
+                  "transactionHash",
+                  "explorerUrl",
+                  "bankReference"
+                ],
+                "additionalProperties": {}
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "approval": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string"
+                  },
+                  "expiresAt": {
+                    "type": [
+                      "string",
+                      "null"
+                    ]
+                  }
+                },
+                "required": [
+                  "status",
+                  "expiresAt"
+                ],
+                "additionalProperties": {}
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "type",
+          "status",
+          "amount",
+          "currency",
+          "metadata",
+          "createdAt",
+          "updatedAt"
+        ],
+        "additionalProperties": {}
       }
     },
     {
@@ -164,6 +900,161 @@
             "maxLength": 100
           }
         }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "nickname": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "belotag": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "isFavorite": {
+                  "type": "boolean"
+                },
+                "tier": {
+                  "type": "string"
+                },
+                "lastTransferAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "accounts": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "currency": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "ownerName": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "addresses": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "addressType": {
+                              "type": "string"
+                            },
+                            "address": {
+                              "type": "string"
+                            },
+                            "network": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "country": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "fields": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "key": {
+                                    "type": "string"
+                                  },
+                                  "label": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  },
+                                  "value": {
+                                    "type": "string"
+                                  },
+                                  "displayValue": {
+                                    "type": [
+                                      "string",
+                                      "null"
+                                    ]
+                                  }
+                                },
+                                "required": [
+                                  "key",
+                                  "label",
+                                  "value",
+                                  "displayValue"
+                                ],
+                                "additionalProperties": {}
+                              }
+                            }
+                          },
+                          "required": [
+                            "addressType",
+                            "address",
+                            "network",
+                            "country",
+                            "fields"
+                          ],
+                          "additionalProperties": {}
+                        }
+                      }
+                    },
+                    "required": [
+                      "currency",
+                      "ownerName",
+                      "addresses"
+                    ],
+                    "additionalProperties": {}
+                  }
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "nickname",
+                "belotag",
+                "isFavorite",
+                "tier",
+                "lastTransferAt",
+                "accounts"
+              ],
+              "additionalProperties": {}
+            }
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
       }
     },
     {
@@ -186,6 +1077,149 @@
         "required": [
           "contactId"
         ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "nickname": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "belotag": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "isFavorite": {
+            "type": "boolean"
+          },
+          "tier": {
+            "type": "string"
+          },
+          "lastTransferAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "accounts": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "currency": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "ownerName": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "addresses": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "addressType": {
+                        "type": "string"
+                      },
+                      "address": {
+                        "type": "string"
+                      },
+                      "network": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "country": {
+                        "type": [
+                          "string",
+                          "null"
+                        ]
+                      },
+                      "fields": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "key": {
+                              "type": "string"
+                            },
+                            "label": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            },
+                            "value": {
+                              "type": "string"
+                            },
+                            "displayValue": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
+                            }
+                          },
+                          "required": [
+                            "key",
+                            "label",
+                            "value",
+                            "displayValue"
+                          ],
+                          "additionalProperties": {}
+                        }
+                      }
+                    },
+                    "required": [
+                      "addressType",
+                      "address",
+                      "network",
+                      "country",
+                      "fields"
+                    ],
+                    "additionalProperties": {}
+                  }
+                }
+              },
+              "required": [
+                "currency",
+                "ownerName",
+                "addresses"
+              ],
+              "additionalProperties": {}
+            }
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "nickname",
+          "belotag",
+          "isFavorite",
+          "tier",
+          "lastTransferAt",
+          "accounts"
+        ],
+        "additionalProperties": {}
       }
     },
     {
@@ -206,6 +1240,88 @@
             "maxLength": 20
           }
         }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "currencyCode": {
+                  "type": "string"
+                },
+                "details": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string"
+                    },
+                    "icon": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "cover": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "description": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "goalAmount": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "icon",
+                    "cover",
+                    "description",
+                    "goalAmount"
+                  ],
+                  "additionalProperties": {}
+                },
+                "balance": {
+                  "type": "string"
+                },
+                "isYieldActive": {
+                  "type": "boolean"
+                },
+                "rate": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "currencyCode",
+                "details",
+                "balance",
+                "isYieldActive",
+                "rate"
+              ],
+              "additionalProperties": {}
+            }
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": false
       }
     },
     {
@@ -228,6 +1344,109 @@
         "required": [
           "vaultId"
         ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "currencyCode": {
+            "type": "string"
+          },
+          "details": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string"
+              },
+              "icon": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "cover": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "description": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "goalAmount": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "name",
+              "icon",
+              "cover",
+              "description",
+              "goalAmount"
+            ],
+            "additionalProperties": {}
+          },
+          "balance": {
+            "type": "string"
+          },
+          "isYieldActive": {
+            "type": "boolean"
+          },
+          "rate": {
+            "type": "string"
+          },
+          "earned": {
+            "type": "object",
+            "properties": {
+              "total": {
+                "type": "string"
+              },
+              "today": {
+                "type": "string"
+              },
+              "yesterday": {
+                "type": "string"
+              },
+              "week": {
+                "type": "string"
+              },
+              "month": {
+                "type": "string"
+              },
+              "year": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "total",
+              "today",
+              "yesterday",
+              "week",
+              "month",
+              "year"
+            ],
+            "additionalProperties": {}
+          }
+        },
+        "required": [
+          "id",
+          "currencyCode",
+          "details",
+          "balance",
+          "isYieldActive",
+          "rate",
+          "earned"
+        ],
+        "additionalProperties": {}
       }
     },
     {
@@ -250,6 +1469,42 @@
         "required": [
           "address"
         ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "address": {
+                  "type": "string"
+                },
+                "addressType": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "name",
+                "address",
+                "addressType"
+              ],
+              "additionalProperties": {}
+            }
+          }
+        },
+        "required": [
+          "data"
+        ],
+        "additionalProperties": {}
       }
     },
     {
@@ -269,6 +1524,23 @@
             "pattern": "^\\d+(\\.\\d+)?$"
           }
         }
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "price": {
+            "type": "string"
+          },
+          "pairCode": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "price",
+          "pairCode"
+        ],
+        "additionalProperties": {}
       }
     },
     {
@@ -291,6 +1563,51 @@
         "required": [
           "currency"
         ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "currency": {
+            "type": "string"
+          },
+          "networks": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "addressType": {
+                  "type": "string"
+                },
+                "minAmount": {
+                  "type": "string"
+                },
+                "maxAmount": {
+                  "type": "string"
+                },
+                "fee": {
+                  "type": "string"
+                },
+                "available": {
+                  "type": "boolean"
+                }
+              },
+              "required": [
+                "addressType",
+                "minAmount",
+                "maxAmount",
+                "fee",
+                "available"
+              ],
+              "additionalProperties": {}
+            }
+          }
+        },
+        "required": [
+          "currency",
+          "networks"
+        ],
+        "additionalProperties": {}
       }
     },
     {
@@ -354,6 +1671,102 @@
           "quoteAmount",
           "currency"
         ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "addressType": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "amount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fee": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "exchangeRate": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "base": {
+                    "type": "string"
+                  },
+                  "quote": {
+                    "type": "string"
+                  },
+                  "rate": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "base",
+                  "quote",
+                  "rate"
+                ],
+                "additionalProperties": {}
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "debits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "currency": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "currency",
+                "amount"
+              ],
+              "additionalProperties": {}
+            }
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "address",
+          "addressType",
+          "currency",
+          "amount",
+          "fee",
+          "expiresAt"
+        ],
+        "additionalProperties": {}
       }
     },
     {
@@ -380,6 +1793,29 @@
         "required": [
           "transactionId"
         ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "approvalExpiresAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "additionalProperties": {}
       }
     },
     {
@@ -407,6 +1843,109 @@
           "address",
           "amount"
         ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "currency": {
+            "type": "string"
+          },
+          "brlAmount": {
+            "type": "string"
+          },
+          "recipientName": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "amount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "fee": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "exchangeRate": {
+            "anyOf": [
+              {
+                "type": "object",
+                "properties": {
+                  "base": {
+                    "type": "string"
+                  },
+                  "quote": {
+                    "type": "string"
+                  },
+                  "rate": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "base",
+                  "quote",
+                  "rate"
+                ],
+                "additionalProperties": {}
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "debits": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "currency": {
+                  "type": "string"
+                },
+                "amount": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "currency",
+                "amount"
+              ],
+              "additionalProperties": {}
+            }
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "address",
+          "currency",
+          "brlAmount",
+          "recipientName",
+          "amount",
+          "fee",
+          "expiresAt"
+        ],
+        "additionalProperties": {}
       }
     },
     {
@@ -433,6 +1972,29 @@
         "required": [
           "transactionId"
         ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "approvalExpiresAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "additionalProperties": {}
       }
     },
     {
@@ -462,6 +2024,19 @@
         "required": [
           "acceptedTerms"
         ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "acceptedTerms": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "acceptedTerms"
+        ],
+        "additionalProperties": {}
       }
     },
     {
@@ -502,6 +2077,59 @@
           "quoteCurrency",
           "type"
         ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "pairCode": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "price": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "baseAmount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "quoteAmount": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "expiresAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "pairCode",
+          "type",
+          "price",
+          "baseAmount",
+          "quoteAmount",
+          "expiresAt"
+        ],
+        "additionalProperties": {}
       }
     },
     {
@@ -528,6 +2156,29 @@
         "required": [
           "transactionId"
         ]
+      },
+      "outputSchema": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "approvalExpiresAt": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "status"
+        ],
+        "additionalProperties": {}
       }
     }
   ]
