@@ -16,7 +16,6 @@ import pytest
 HISTORIAL_PATH = Path(__file__).resolve().parents[2] / "data" / "historial-sofia.json"
 
 
-@pytest.mark.xfail(strict=False, reason="Pendiente de merge de api/persistencia")
 def test_T01_reglas_duras_viven_en_db_y_codigo(tmp_path: Path) -> None:
     """T01: Las reglas duras confirmadas quedan persistidas en SQLite, no en el prompt."""
     from sqlmodel import Session
@@ -79,7 +78,6 @@ def test_T05_timeout_reconcilia_sin_duplicar() -> None:
     assert reconciliar is not None
 
 
-@pytest.mark.xfail(strict=False, reason="Pendiente de merge de api/persistencia")
 def test_T06_doble_aprobar_no_duplica_plan_ni_movimiento(tmp_path: Path) -> None:
     """T06: La clave de idempotencia en DB evita ejecuciones duplicadas ante doble clic."""
     from sqlmodel import Session
@@ -135,7 +133,6 @@ def test_T07_caso_rojo_bloqueado_aunque_usuario_insista() -> None:
     assert evaluar is not None
 
 
-@pytest.mark.xfail(strict=False, reason="Pendiente de merge de domain/perfilador")
 def test_T08_prompt_injection_en_movimiento_bloqueado() -> None:
     """T08: Un prompt injection en account.activity se marca INTENTO_BLOQUEADO."""
     from app.domain.perfilador import (
@@ -164,7 +161,6 @@ def test_T08_prompt_injection_en_movimiento_bloqueado() -> None:
     assert [m.id for m in res_alto.intentos_bloqueados] == ["mov-atk-1500"]
 
 
-@pytest.mark.xfail(strict=False, reason="Pendiente de merge de domain/fx-banda")
 def test_T09_fx_fuera_de_banda_retiene_y_dentro_ejecuta() -> None:
     """T09: Si el dólar empeora >2%, retiene; si no, ejecuta sin pasar lo aprobado."""
     from app.domain.fx import DecisionFX, chequear_fx_al_ejecutar
@@ -195,7 +191,6 @@ def test_T10_autonomia_sube_con_evidencia_y_baja_con_reverso() -> None:
     assert actualizar_autonomia is not None
 
 
-@pytest.mark.xfail(strict=False, reason="Pendiente de merge de domain/fx-banda")
 def test_T11_adelanto_favorable_propone_menos_usd() -> None:
     """T11: Si el FX mejora >=2% antes del vencimiento, propone adelantar con USD <= aprobado."""
     from app.domain.fx import evaluar_oportunidad_favorable
@@ -216,7 +211,6 @@ def test_T11_adelanto_favorable_propone_menos_usd() -> None:
     assert propuesta.monto_usd <= Decimal("380")
 
 
-@pytest.mark.xfail(strict=False, reason="Pendiente de merge de domain/perfilador")
 def test_T12_patron_detectado_no_se_aplica_sin_confirmacion() -> None:
     """T12: El perfilador propone reglas pendientes y solo se aplican al confirmar."""
     from app.domain.perfilador import (
