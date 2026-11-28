@@ -1,4 +1,4 @@
-"""Pruebas del esqueleto FastAPI (/api/salud y montaje de estáticos)."""
+"""Pruebas del esqueleto FastAPI (/api/salud, semilla al arranque y montaje de estáticos)."""
 
 from __future__ import annotations
 
@@ -6,7 +6,9 @@ from pathlib import Path
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlmodel import Session
 
+from app.db import listar_vencimientos, obtener_perfil, obtener_reglas
 from app.main import create_app
 
 
@@ -16,6 +18,23 @@ def test_salud_responde_ok() -> None:
 
     assert response.status_code == 200
     assert response.json() == {"estado": "ok", "servicio": "cfo-agentico"}
+
+
+def test_arranque_siembra_sofia_en_sqlite(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    db_file = tmp_path / "arranque.db"
+    monkeypatch.setenv("DATABASE_URL", f"sqlite:///{db_file}")
+
+    app_instance = create_app()
+    with TestClient(app_instance) as client:
+        resp = client.get("/api/salud")
+        assert resp.status_code == 200
+
+        with Session(app_instance.state.db_engine) as session:
+            assert obtener_perfil(session, "sofia-demo") is not None
+            assert obtener_reglas(session, "sofia-demo") is not None
+            assert len(listar_vencimientos(session, "sofia-demo")) == 2
 
 
 def test_sirve_estaticos_desde_frontend_dist(
