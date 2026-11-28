@@ -1,8 +1,8 @@
 # Tools del MCP de Belo
 
-Lista obtenida el 27-nov-2026 conectando `https://b2b.belo.app/mcp` como conector personalizado de claude.ai, con el permiso **"Consultar"**. Se pidieron las definiciones sin ejecutar ninguna tool. Nuestro cliente en Python todavía recibe 403 de Cloudflare (ver [`decisiones.md`](../decisiones.md), pregunta 1), así que esta lista es una transcripción de las definiciones y no un volcado de `tools/list`. Cuando el script `backend/scripts/listar_tools_belo.py` pueda conectar, `tools.json` se reemplaza por los esquemas exactos.
+Lista obtenida el 27-nov-2026 con el permiso **"Consultar"** y **verificada contra `tools/list` del servidor real** con `backend/scripts/listar_tools_belo.py`: coinciden los 18 nombres, los parámetros y los obligatorios. Los esquemas exactos (solo estructura: nombres, tipos, enums y obligatorios) están en [`tools.json`](tools.json). Las descripciones y las instrucciones del servidor son textos de Belo y no se copian aquí: el script las deja en `~/.cfo-agentico/belo-mcp-completo.json`, en la máquina de cada persona.
 
-Son **18 tools** en cuatro grupos. Los montos viajan como **texto decimal** (por ejemplo `"150.00"`).
+Son **18 tools** en cuatro grupos. Los montos viajan como **texto decimal** (por ejemplo `"150.00"`). **Los pesos argentinos se llaman `ARGt`**, no `ARS` (por ejemplo, el par `USDT/ARGt`).
 
 ## Solo lectura (11)
 
@@ -51,6 +51,8 @@ Cada una necesita el id de una cotización vigente y la aprobación de la person
 - Ningún `belo_confirm_*` se ejecuta directamente. Si la cuenta es de quien conectó, la transacción queda en `awaiting_approval` y llega una notificación a la app de Belo para aprobar o rechazar. Si no, la tool devuelve un enlace de Belo donde la persona revisa la operación con el precio actualizado.
 - `waitForApproval` permite que la tool espere la decisión. Sin esperar, el estado se consulta con `belo_get_transaction`.
 - El patrón es siempre **cotizar → confirmar → aprobar en Belo → consultar el estado**.
+- **Idempotencia:** no se pasa ninguna clave. Confirmar deriva la clave de la transacción, así que repetir un `belo_confirm_*` es seguro, pero devuelve la respuesta **original**, no el estado actual. Después de un timeout, la verdad se lee con `belo_get_transaction` (T05 y T06).
+- Si la persona aprueba desde un enlace, Belo vuelve a cotizar en esa página: el monto ejecutado puede diferir de la cotización previa. Se informa el resultado tal como lo devuelve la transacción.
 
 ## Límites que nos afectan
 

@@ -2,14 +2,20 @@
 # requires-python = ">=3.10"
 # dependencies = ["mcp>=2.3"]
 # ///
-"""Lista las tools del MCP de Belo y las guarda en docs/belo-mcp/.
+"""Lista las tools del MCP de Belo y guarda su estructura en docs/belo-mcp/tools.json.
 
-Se conecta por HTTP con OAuth (registro dinámico, sin client ID ni secreto), abre el
-login de Belo en el navegador y, con la sesión iniciada, pide `tools/list`.
+Se conecta por HTTP con OAuth, abre el login de Belo en el navegador y, con la sesión
+iniciada, pide `tools/list`.
+
+Cloudflare bloquea el registro automático del cliente (403), así que se usa un cliente
+registrado a mano en el servidor OAuth de Belo (https://bifrost.belo.app/oauth/register),
+con `redirect_uris` en http://localhost:33418/callback. Su `client_id` va en BELO_CLIENT_ID
+(no es secreto: el cliente es público, sin contraseña).
 No llama a ninguna tool: no consulta saldos ni mueve dinero.
 
 Uso (desde la raíz del repositorio):
 
+    $env:BELO_CLIENT_ID = "dyn_..."            # PowerShell; en bash: export BELO_CLIENT_ID=dyn_...
     uv run backend/scripts/listar_tools_belo.py
     # o, sin uv:
     pip install "mcp>=2.3" && python backend/scripts/listar_tools_belo.py
@@ -24,6 +30,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import os
 import sys
 import threading
 import webbrowser
@@ -45,10 +52,23 @@ from mcp.shared.auth import (
 )
 
 BELO_MCP_URL = "https://b2b.belo.app/mcp"
-PUERTO_CALLBACK = 8765
+CLIENT_ID = os.getenv("BELO_CLIENT_ID")
+PUERTO_CALLBACK = int(os.getenv("BELO_CALLBACK_PORT", "33418"))
 REDIRECT_URI = f"http://localhost:{PUERTO_CALLBACK}/callback"
 ARCHIVO_TOKENS = Path.home() / ".cfo-agentico" / "belo-oauth.json"
 SALIDA = Path(__file__).resolve().parents[2] / "docs" / "belo-mcp"
+# El volcado completo (descripciones e instrucciones del servidor, textos de Belo) queda fuera
+# del repositorio, que es público. En docs/belo-mcp/ va solo la estructura de cada tool.
+COMPLETO = Path.home() / ".cfo-agentico" / "belo-mcp-completo.json"
+
+
+def _estructura(valor):
+    """Quita los textos descriptivos y deja nombres, tipos, enums y campos obligatorios."""
+    if isinstance(valor, dict):
+        return {k: _estructura(v) for k, v in valor.items() if k not in ("description", "title")}
+    if isinstance(valor, list):
+        return [_estructura(v) for v in valor]
+    return valor
 
 
 class AlmacenEnArchivo(TokenStorage):
@@ -132,44 +152,26 @@ async def esperar_callback() -> AuthorizationCodeResult:
     return AuthorizationCodeResult(code=q["code"], state=q.get("state"), iss=q.get("iss"))
 
 
-def _a_markdown(info: dict, tools: list[dict]) -> str:
-    lineas = [
-        "# Tools del MCP de Belo",
-        "",
-        f"Generado con `backend/scripts/listar_tools_belo.py` el {info['generado']} contra `{BELO_MCP_URL}`.",
-        f"Servidor: **{info.get('servidor', '?')}** {info.get('version', '')}. Protocolo MCP {info.get('protocolo', '?')}.",
-        "",
-        "La lista puede depender de los permisos elegidos en el login (Consultar u Operar).",
-        "",
-        "| Tool | Solo lectura | Descripción | Parámetros |",
-        "|---|---|---|---|",
-    ]
-    for t in tools:
-        props = (t.get("inputSchema") or {}).get("properties", {}) or {}
-        req = set((t.get("inputSchema") or {}).get("required", []) or [])
-        params = ", ".join(f"`{p}`{'*' if p in req else ''}" for p in props) or "—"
-        ann = t.get("annotations") or {}
-        lectura = {True: "Sí", False: "No"}.get(ann.get("readOnlyHint"), "?")
-        desc = (t.get("description") or "").replace("\n", " ").replace("|", "\\|").strip()
-        lineas.append(f"| `{t['name']}` | {lectura} | {desc} | {params} |")
-    lineas += ["", "`*` = obligatorio. Esquemas completos en [`tools.json`](tools.json)."]
-    if info.get("instrucciones"):
-        lineas += ["", "## Instrucciones del servidor", "", info["instrucciones"]]
-    return "\n".join(lineas) + "\n"
-
-
 async def main() -> None:
+    metadatos = OAuthClientMetadata(
+        client_name="CFO Agéntico (Dev IngenierIA)",
+        redirect_uris=[REDIRECT_URI],
+        grant_types=["authorization_code", "refresh_token"],
+        response_types=["code"],
+        token_endpoint_auth_method="none",
+    )
+    almacen = AlmacenEnArchivo(ARCHIVO_TOKENS)
+    if CLIENT_ID:  # cliente registrado a mano: el SDK no intenta el registro dinámico
+        info = await almacen.get_client_info()
+        if info is None or info.client_id != CLIENT_ID:
+            await almacen.set_client_info(
+                OAuthClientInformationFull(client_id=CLIENT_ID, **metadatos.model_dump())
+            )
     servidor = _levantar_servidor()
     proveedor = OAuthClientProvider(
         server_url=BELO_MCP_URL,
-        client_metadata=OAuthClientMetadata(
-            client_name="CFO Agéntico (Dev IngenierIA)",
-            redirect_uris=[REDIRECT_URI],
-            grant_types=["authorization_code", "refresh_token"],
-            response_types=["code"],
-            token_endpoint_auth_method="none",
-        ),
-        storage=AlmacenEnArchivo(ARCHIVO_TOKENS),
+        client_metadata=metadatos,
+        storage=almacen,
         redirect_handler=abrir_login,
         callback_handler=esperar_callback,
     )
@@ -196,12 +198,27 @@ async def main() -> None:
         "protocolo": init.protocol_version,
         "instrucciones": init.instructions,
     }
-    SALIDA.mkdir(parents=True, exist_ok=True)
-    (SALIDA / "tools.json").write_text(
+    COMPLETO.parent.mkdir(parents=True, exist_ok=True)
+    COMPLETO.write_text(
         json.dumps({"info": info, "tools": tools}, indent=2, ensure_ascii=False), encoding="utf-8"
     )
-    (SALIDA / "tools.md").write_text(_a_markdown(info, tools), encoding="utf-8")
-    print(f"\n{len(tools)} tools guardadas en {SALIDA}:")
+    publico = {k: v for k, v in info.items() if k != "instrucciones"}
+    estructura = [
+        {
+            "name": t["name"],
+            "annotations": t.get("annotations", {}),
+            "inputSchema": _estructura(t.get("inputSchema", {})),
+        }
+        for t in tools
+    ]
+    SALIDA.mkdir(parents=True, exist_ok=True)
+    (SALIDA / "tools.json").write_text(
+        json.dumps({"info": publico, "tools": estructura}, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+        newline="\n",
+    )
+    print(f"\nVolcado completo (fuera del repo): {COMPLETO}")
+    print(f"{len(tools)} tools, solo estructura, en {SALIDA / 'tools.json'}:")
     for t in tools:
         print(f"  - {t['name']}")
 
