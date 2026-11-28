@@ -1,8 +1,7 @@
-// Todo el estado de la app en un solo lugar. Sin librería de estado y sin router:
-// la "navegación" es el campo `vista`, y cambiarlo es despachar una acción.
-import type { EntradaLog, Plan, PropuestaPerfilado, Reglas, Sesion } from '../api/tipos';
+// Todo el estado de la app. Tres vistas y nada más: la navegación es el campo `vista`.
+import type { EntradaLog, PerfilId, Plan, PropuestaPerfilado, Reglas, Sesion } from '../api/tipos';
 
-export type Vista = 'landing' | 'login' | 'perfilado' | 'reglas' | 'plan' | 'aprobacion' | 'resumen';
+export type Vista = 'home' | 'modo' | 'asistente';
 
 export interface EstadoApp {
   vista: Vista;
@@ -11,23 +10,27 @@ export interface EstadoApp {
   propuestas: PropuestaPerfilado[];
   plan: Plan | null;
   log: EntradaLog[];
+  /** Qué perfil está iniciando sesión ahora. Es el guardia contra el doble clic. */
+  iniciando: PerfilId | null;
   /** Lo último que pasó, para leerlo en la región aria-live. */
   anuncio: string;
 }
 
 export const ESTADO_INICIAL: EstadoApp = {
-  vista: 'landing',
+  vista: 'home',
   sesion: null,
   reglas: null,
   propuestas: [],
   plan: null,
   log: [],
+  iniciando: null,
   anuncio: '',
 };
 
 export type Accion =
   | { tipo: 'ir'; vista: Vista }
-  | { tipo: 'sesion'; sesion: Sesion }
+  | { tipo: 'iniciando'; perfil_id: PerfilId }
+  | { tipo: 'sesion'; sesion: Sesion; reglas: Reglas }
   | { tipo: 'reglas'; reglas: Reglas }
   | { tipo: 'propuestas'; propuestas: PropuestaPerfilado[] }
   | { tipo: 'plan'; plan: Plan | null }
@@ -39,8 +42,21 @@ export function reducer(estado: EstadoApp, accion: Accion): EstadoApp {
   switch (accion.tipo) {
     case 'ir':
       return { ...estado, vista: accion.vista };
+
+    case 'iniciando':
+      // Si ya hay una sesión en vuelo, el segundo clic (en el mismo botón o en el otro)
+      // se ignora. Así nunca se arrancan dos personas a la vez.
+      return estado.iniciando ? estado : { ...estado, iniciando: accion.perfil_id };
+
     case 'sesion':
-      return { ...estado, sesion: accion.sesion };
+      return {
+        ...estado,
+        sesion: accion.sesion,
+        reglas: accion.reglas,
+        iniciando: null,
+        vista: 'asistente',
+      };
+
     case 'reglas':
       return { ...estado, reglas: accion.reglas };
     case 'propuestas':
@@ -52,15 +68,6 @@ export function reducer(estado: EstadoApp, accion: Accion): EstadoApp {
     case 'anunciar':
       return { ...estado, anuncio: accion.texto };
     case 'reiniciar':
-      return { ...ESTADO_INICIAL, vista: 'login' };
+      return ESTADO_INICIAL;
   }
-}
-
-/** Qué pasos se pueden visitar con lo que hay hecho hasta ahora. */
-export function pasoHabilitado(vista: Vista, estado: EstadoApp): boolean {
-  if (vista === 'landing' || vista === 'login') return true;
-  if (!estado.sesion) return false;
-  if (vista === 'perfilado' || vista === 'reglas') return true;
-  if (vista === 'plan') return Boolean(estado.reglas);
-  return Boolean(estado.plan);
 }
