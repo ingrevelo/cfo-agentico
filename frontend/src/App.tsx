@@ -1,53 +1,50 @@
-// El armazón de la app: el proveedor del estado, la barra de pasos, la pantalla
-// que toca según `vista`, y la región que anuncia los cambios a un lector de pantalla.
-import { AvisoSintetico } from './components/avisos';
-import BarraPasos from './components/BarraPasos';
+// El armazón: columna flex de alto mínimo 100dvh, con el pie SIEMPRE en el flujo
+// normal (nunca fixed), así nunca se corta ni tapa el contenido.
+import { useState } from 'react';
+import GaleriaBuho from './components/buho/GaleriaBuho';
+import BarraSuperior from './components/BarraSuperior';
+import HojaAjustes from './components/ajustes/HojaAjustes';
+import Asistente from './screens/Asistente';
+import Home from './screens/Home';
+import Modo from './screens/Modo';
 import { ProveedorApp, useApp } from './state/contexto';
-import PantallaAprobacion from './screens/aprobacion/PantallaAprobacion';
-import PantallaLanding from './screens/landing/PantallaLanding';
-import PantallaLogin from './screens/login/PantallaLogin';
-import PantallaPerfilado from './screens/perfilado/PantallaPerfilado';
-import PantallaPlan from './screens/plan/PantallaPlan';
-import PantallaReglas from './screens/reglas/PantallaReglas';
-import PantallaResumen from './screens/resumen/PantallaResumen';
 
 function Contenido() {
   const { estado } = useApp();
-  const conPasos = estado.vista !== 'landing' && estado.vista !== 'login';
+  const [ajustes, setAjustes] = useState(false);
 
   return (
-    <div className="mx-auto min-h-screen w-full max-w-3xl px-4 pb-10 pt-6">
-      {/* Lo que acaba de pasar, para quien usa un lector de pantalla. */}
+    <div
+      className="mx-auto flex min-h-[100dvh] w-full max-w-xl flex-col px-4"
+      style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
+    >
       <p aria-live="polite" className="sr-only">
         {estado.anuncio}
       </p>
 
-      {conPasos && <BarraPasos />}
+      {estado.vista === 'asistente' && <BarraSuperior onAjustes={() => setAjustes(true)} />}
 
-      <main>
-        {estado.vista === 'landing' && <PantallaLanding />}
-        {estado.vista === 'login' && <PantallaLogin />}
-        {estado.vista === 'perfilado' && <PantallaPerfilado />}
-        {estado.vista === 'reglas' && <PantallaReglas />}
-        {estado.vista === 'plan' && <PantallaPlan />}
-        {estado.vista === 'aprobacion' && <PantallaAprobacion />}
-        {estado.vista === 'resumen' && <PantallaResumen />}
+      <main className="flex flex-1 flex-col">
+        {estado.vista === 'home' && <Home />}
+        {estado.vista === 'modo' && <Modo />}
+        {estado.vista === 'asistente' && <Asistente />}
       </main>
 
-      {estado.vista !== 'landing' && (
-        <footer className="mt-10 space-y-3">
-          <AvisoSintetico />
-          <p className="text-xs leading-relaxed text-ash-texto">
-            CFO Agéntico · Dev IngenierIA. Los datos de esta demo son inventados y no corresponden a
-            ninguna persona ni empresa real.
-          </p>
-        </footer>
+      <footer className="pt-8 text-sm text-tinta-suave">Demo con datos sintéticos.</footer>
+
+      {estado.vista === 'asistente' && (
+        <HojaAjustes abierta={ajustes} onCerrar={() => setAjustes(false)} />
       )}
     </div>
   );
 }
 
 export default function App() {
+  // Galería de chequeo del búho: ?galeria-buho en la URL.
+  if (typeof window !== 'undefined' && window.location.search.includes('galeria-buho')) {
+    return <GaleriaBuho />;
+  }
+
   return (
     <ProveedorApp>
       <Contenido />

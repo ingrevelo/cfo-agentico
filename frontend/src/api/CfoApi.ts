@@ -34,4 +34,8 @@ export interface CfoApi {
   configurarDemo(c: ConfigDemo): Promise<void>; // solo demo: escenario de FX y timeout inyectado. Proponerlo a Cesar/Juan Carlos
   obtenerLog(): Promise<EntradaLog[]>; // GET /api/log
   reiniciarDemo(): Promise<void>; // POST /api/demo/reiniciar
+
+  // PENDIENTE de acordar con Juan Carlos y Cesar antes de implementarlo:
+  // cambiar el monto del ingreso de la demo desde la hoja de ajustes.
+  // cambiarIngresoDemo(monto_usd: number): Promise<void>;   // POST /api/demo/ingreso
 }

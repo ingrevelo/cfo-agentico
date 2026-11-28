@@ -1,7 +1,7 @@
 # Frontend · CFO Agéntico
 
-React 18 + TypeScript con Vite y Tailwind CSS. Una sola app responsive, mobile-first:
-en celular una columna, en escritorio un contenedor centrado.
+React 18 + TypeScript con Vite y Tailwind CSS. Una sola app responsive, mobile-first,
+con el búho CFO como guía.
 
 > **Estado:** el flujo completo funciona de punta a punta con datos sintéticos y **sin backend**.
 
@@ -14,47 +14,69 @@ npm run dev     # servidor de desarrollo en http://localhost:5173/
 ```
 
 ```bash
-npm test        # los tests del plan, el juez, los estados y la idempotencia
+npm test        # 50 tests: el plan, el juez, los estados, la idempotencia y el reducer
 npm run build   # chequea los tipos y compila a frontend/dist/
-npm run preview # sirve lo compilado, para verlo como va a quedar
+npm run preview # sirve lo compilado
 ```
 
 No hace falta el backend ni ninguna clave: todo corre contra `MockCfoApi`.
 
-## El flujo
+## El flujo: 4 toques hasta el plan aprobado
 
 ```
-Landing → Login demo → Perfilado → Reglas → Plan → Caso Rojo + Aprobación → Resumen y MCP Log
+HOME  →  ¿Cómo vas a usar tu CFO?  →  conversación con el búho
+ 1 Probar la demo    2 Para mí / Para mi empresa    3 Aprobar plan    4 Confirmar en Belo
 ```
 
-| Pantalla | Qué se hace |
+Son **dos aprobaciones distintas** y no se juntan (D13 y D14): la primera es tuya, en
+CFO Agéntico; la segunda la pide Belo con un código que en la vida real llega por correo.
+En la demo el código viene precargado: **123456**.
+
+Todo lo demás es opcional: el Caso Rojo ("Probar qué pasa si pido de más"), las reglas, el
+perfilado, Premium y los controles del jurado viven en la **hoja de ajustes (⚙)**.
+
+| Momento | Qué hace el búho |
 |---|---|
-| **Landing** | El problema, cómo funciona en 3 pasos y por qué se le puede confiar el dinero |
-| **Login demo** | Se elige un perfil: Sofía (freelance) o Nodo Consultora (pyme). Sin correo ni contraseña |
-| **Perfilado** | El agente muestra los patrones que encontró. Hasta que se confirman, las reglas no cambian |
-| **Reglas** | Las reglas duras y los vencimientos, editables y validados |
-| **Plan** | "Simular ingreso" arma el plan del pago con sus 3 movimientos y las reglas verificadas |
-| **Caso Rojo + Aprobación** | Se intenta forzar al agente (el motor bloquea) y se aprueba en dos pasos |
-| **Resumen** | Qué se hizo, los saldos finales, el MCP Log y "Reiniciar demo" |
+| Bienvenida | Saluda y dice cuánto entró |
+| Cargando | Muestra las 4 lecturas reales del MCP Log |
+| Propuesta | Presenta la tarjeta del plan |
+| Caso Rojo | Frena la operación y explica el límite |
+| Aprobación | Anota tu OK y pide la confirmación de Belo |
+| Ejecutando | Muestra la pista: Propuesto → Aprobado → Ejecutando → Completado |
+| Completado | Festeja y abre el detalle del MCP Log |
 
-**Las dos aprobaciones (D13 y D14).** Primero se aprueba el plan en CFO Agéntico. Después, cada
-movimiento real se aprueba otra vez en el link de Belo, con un código. El código de la demo es
-**123456**. La alcancía no pasa por Belo: se completa sola y siempre va SIMULATED.
+## El búho: dónde van las imágenes
 
-**Controles de demo.** En la pantalla de aprobación hay un panel plegable para el jurado: elegir si
-el dólar se mantiene o empeora, inyectar un timeout en la primera conversión y avanzar al día del
-vencimiento.
+Las imágenes **no están en el repo**: las guarda Brigitte a mano en `frontend/public/buho/`,
+con estos nombres exactos y en minúsculas:
 
-## Qué es simulado
+```
+frontend/public/buho/buho-sprite.png   la hoja de 12 poses (4 columnas x 3 filas)
+frontend/public/buho/buho-hero.png     opcional: el búho con los brazos cruzados, para la home
+```
 
-**Todo.** La URL pública no usa el MCP real (D16), así que cada fila del MCP Log tiene `live: false`
-y su motivo:
+> Ojo con Windows: si tenés oculta la extensión, podés terminar con `buho-sprite.png.png`.
+> Activá "Extensiones de nombre de archivo" en la pestaña Vista del Explorador.
 
-- **Las alcancías:** no se pueden mover desde el MCP, solo consultar. Van SIMULATED siempre, incluso
-  con el MCP real.
+**La app funciona sin las imágenes:** muestra un 🦉 en su lugar y el build nunca depende de ellas.
+
+Para revisar que el recorte quede alineado: **http://localhost:5173/?galeria-buho** muestra las
+12 poses con su nombre y su celda. Si alguna sale corrida, hay que ajustar `CELDA_RATIO` en
+`src/components/buho/poses.ts` con las medidas reales del PNG.
+
+## Qué es simulado y qué es Premium
+
+**Todo está simulado.** La URL pública no usa el MCP real de Belo (D16), así que hay **un solo**
+badge SIMULATED, en la barra de arriba, y vale para toda la app. Cada fila del MCP Log lleva
+`live: false` con su motivo:
+
+- **Las alcancías:** el MCP solo permite consultarlas, nunca moverlas. Van simuladas siempre,
+  incluso con el MCP real.
 - **Todo lo demás:** la URL pública no usa el MCP real.
 
-Los datos de los dos perfiles son sintéticos: no son de ninguna persona ni empresa real.
+**Premium está solo mostrado, no construido:** autonomía ganada, alertas del dólar según tu regla
+(no predice), varias monedas, procesos de pyme, reportes y varios usuarios. El precio es "mensual,
+con tope · a definir" y el botón dice "Próximamente". No pide ningún dato.
 
 ## Arquitectura
 
@@ -62,20 +84,15 @@ La interfaz **nunca** importa un JSON ni calcula dinero: solo habla con la inter
 
 ```
 frontend/src/
-├── api/
-│   ├── tipos.ts            Modelos tipados (los reemplazan los generados del OpenAPI)
+├── api/                    (no cambió en esta vuelta)
+│   ├── tipos.ts            Modelos tipados
 │   ├── CfoApi.ts           La interfaz: un método por endpoint
 │   ├── index.ts            export const api: CfoApi = new MockCfoApi()  <- ÚNICO punto de cambio
-│   └── mock/
-│       ├── MockCfoApi.ts   Backend de mentira: estado en memoria, latencia, idempotencia y log
-│       ├── dominio.ts      ESPEJO TEMPORAL del backend: plan, juez y estados (funciones puras)
-│       ├── registro.ts     El MCP Log en memoria
-│       └── *.test.ts       Tests de vitest
+│   └── mock/               Backend de mentira: MockCfoApi, dominio espejo, registro y tests
 ├── data/                   Los dos JSON sintéticos, los textos por perfil y el perfilado
-├── state/                  useReducer + Context, y el hook useAccion
-├── components/             Piezas compartidas
-├── screens/                Una carpeta por pantalla
-└── formato.ts              El único lugar donde se formatean montos (Intl es-AR)
+├── state/                  reducer (home | modo | asistente), faseDe, useAccion y el cerrojo
+├── components/             Buho, barra superior, badges, tabla del log y la hoja de ajustes
+└── screens/                Home, Modo y Asistente (con sus piezas en screens/asistente/)
 ```
 
 ### De cada método de `CfoApi` a su endpoint
@@ -83,26 +100,27 @@ frontend/src/
 | Método | Endpoint real (`backend/app/api/README.md`) |
 |---|---|
 | `iniciarSesionDemo` | Solo del frontend. En producción: `auth.sign_in` (OAuth de Belo) |
-| `obtenerReglas` | `GET /api/reglas` |
-| `guardarReglas` | `PUT /api/reglas` |
+| `obtenerReglas` / `guardarReglas` | `GET` / `PUT /api/reglas` |
 | `correrPerfilado` | `POST /api/perfilado` |
 | `resolverPropuesta` | `POST /api/perfilado/{propuesta_id}/confirmar` |
 | `simularIngreso` | `POST /api/ingresos/simular` |
 | `obtenerPlan` | `GET /api/planes/{plan_id}` |
 | `editarMovimiento` | `PATCH /api/planes/{plan_id}/movimientos/{paso}` |
 | `aprobarPlan` | `POST /api/planes/{plan_id}/aprobar` (idempotente) |
-| `obtenerEnlaceBelo` | Lo genera el MCP de Belo al pedir una cotización |
-| `confirmarEnlaceBelo` | Lo hace Belo con el código por correo; el agente se entera después |
+| `obtenerEnlaceBelo` / `confirmarEnlaceBelo` | Los genera y valida Belo; falta definirlos en la API |
 | `avanzarDemo` | `POST /api/demo/avanzar` |
-| `configurarDemo` | **No existe todavía:** propuesta para configurar el escenario de FX y el timeout |
+| `configurarDemo` | **No existe todavía:** propuesta para el escenario de FX y el timeout |
 | `obtenerLog` | `GET /api/log` |
 | `reiniciarDemo` | `POST /api/demo/reiniciar` |
 
+**Pendiente:** cambiar el monto del ingreso desde la hoja de ajustes necesita un método nuevo.
+Está anotado y comentado en `CfoApi.ts`, sin implementar.
+
 ### `dominio.ts` es un espejo temporal
 
-`src/api/mock/dominio.ts` repite las reglas del backend (el motor, el juez y la máquina de estados)
-para que la demo funcione sin API. **La fuente de verdad es `backend/app/domain`.** Ese archivo se
-borra cuando `front/cliente-api` conecte la API real.
+`src/api/mock/dominio.ts` repite las reglas del backend (motor, juez y máquina de estados) para que
+la demo funcione sin API. **La fuente de verdad es `backend/app/domain`.** Se borra cuando
+`front/cliente-api` conecte la API real.
 
 ### Para conectar el backend
 
@@ -112,22 +130,49 @@ borra cuando `front/cliente-api` conecte la API real.
 
 Ninguna pantalla cambia.
 
-## Estética y accesibilidad
+## Paleta y por qué
+
+El violeta de **Belo** (`#5300DA`) manda en todo lo interactivo; los colores de la propuesta de
+identidad van en superficies, ilustración y estados.
 
 | Token | Color | Uso |
 |---|---|---|
-| `fog` | `#FAFAFA` | Fondo de la página |
-| `card` | `#FFFFFF` | Tarjetas |
-| `ink` | `#000000` | Texto principal y botón primario |
-| `ash` | `#999999` | **Solo decoración:** sobre blanco da 2,8:1 y no pasa WCAG AA |
-| `ash-texto` | `#6B6B6B` | Todo texto que haya que leer (alrededor de 5:1) |
-| `mint` | `#00FFB2` | Estados completados |
-| `violeta` | `#5300DA` | Badge SIMULATED y foco del teclado |
+| `fondo` | `#F5F3ED` | Calma: fondo de la app |
+| `tarjeta` | `#FFFFFF` | Tarjetas |
+| `tinta` | `#202127` | Profesionalismo: texto y encabezados |
+| `tinta-suave` | `#5F6068` | Texto secundario (6,25:1 sobre blanco) |
+| `violeta` | `#5300DA` | Botones, enlaces y foco (blanco encima: 8,8:1) |
+| `violeta-medio` | `#6944D4` | Inteligencia: encabezado de la tarjeta del plan |
+| `violeta-claro` | `#BBA9F4` | Cercanía: bordes e ilustración. **Nunca texto** |
+| `violeta-suave` | `#EDE8FD` | Burbujas, chips y la hoja de ajustes |
+| `exito` / `exito-texto` | `#34A87B` / `#1F7A57` | Progreso: el primero solo en rellenos; el segundo es el que se lee |
+| `peligro` | `#B3261E` | Bloqueos |
+| `aviso-texto` sobre `aviso-suave` | `#7A4E00` / `#FFF1CC` | Retenido y Desconocido |
 
-Inter. Títulos en 700, `letter-spacing: -0.04em`. Una sola acción primaria por pantalla: pastilla
-negra de 40 px, fija abajo en celular. Cada input con su `label`, errores con `aria-invalid` y
-`aria-describedby`, foco visible, y al cambiar de pantalla el foco va al `h1`. Los estados nunca se
-distinguen solo por color: todos llevan texto.
+Todos los pares de texto llegan a 4,5:1 o más (verificado con un script de contraste).
 
-Textos en castellano simple y voseo rioplatense. Se escribe "dinero", no "plata". Sin jerga cripto:
-"rindiendo", "apartar", "cambiar a pesos". El rendimiento es variable: nunca se promete una tasa.
+Un solo estilo de botón en toda la app: **primario** = pastilla violeta de 56 px, 17 px semibold;
+**secundario** = botón de texto de 48 px. Un solo estilo de tarjeta (blanca, `rounded-3xl`, casi sin
+sombra). Espaciado en múltiplos de 8. Inter, títulos 700 con `tracking -0.04em`.
+
+## Layout: el pie siempre se lee
+
+El layout raíz es una columna flex de `min-h-[100dvh]` con el pie en **flujo normal** (nunca
+`fixed` ni `absolute`), `main` en `flex-1`, `overflow: visible` en `html`, `body` y `#root`, y
+`padding-bottom: max(16px, env(safe-area-inset-bottom))`.
+
+Probado a mano en 360, 768 y 1280 px, y en 360 px con zoom 200%: en los cuatro, el pie se lee
+entero, no hay scroll horizontal y ningún botón primario queda cortado.
+
+## Accesibilidad y copy
+
+Foco al `h1` al cambiar de pantalla, `aria-live` en los cambios de estado, `role="alert"` en errores
+y bloqueos, labels en todos los inputs, foco visible violeta y `prefers-reduced-motion` respetado en
+toda animación. Los estados nunca se distinguen solo por color: todos llevan texto.
+
+Voseo rioplatense y castellano simple. Se escribe "dinero", no "plata". Sin jerga cripto. El
+rendimiento es variable: nunca se promete una tasa.
+
+> **Para Julia y Cesar (guion de la demo):** la "pantalla 1 · Reglas" y el "Perfilado" de
+> `docs/ruta-de-trabajo.md` ya no son pantallas del flujo: viven en la hoja de ajustes (⚙).
+> El recorrido de la demo ahora es home → modo → conversación.
