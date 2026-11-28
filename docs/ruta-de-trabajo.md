@@ -113,7 +113,7 @@ Reglas:
 5. En Cloudflare, crear el registro A del subdominio (por ejemplo `cfo`) hacia la IP del droplet, en modo "DNS only".
 6. Crear `/opt/cfo-agentico/.env` con los secretos (permisos `600`) y cargar `DO_HOST`, `DO_USER` y `DO_SSH_KEY` en los Secrets del repositorio.
 
-Desde ahí, Juan Carlos sube los archivos de despliegue en `api/deploy-digitalocean` y el primer merge publica la URL.
+Desde ahí, Cesar sube los archivos de despliegue en `api/deploy-digitalocean` y el primer merge publica la URL.
 
 ### Decisiones a votar en el kickoff
 
@@ -126,83 +126,86 @@ Desde ahí, Juan Carlos sube los archivos de despliegue en `api/deploy-digitaloc
 
 ## 2. Roles, dueños y ramas
 
-Cada persona es dueña de carpetas distintas y trabaja con los prefijos de rama de [`CONTRIBUTING.md`](../CONTRIBUTING.md). Los demás pueden abrir PR en carpetas ajenas, pero el dueño revisa.
+El reparto es el de [`AGENTS.md`](../AGENTS.md), sección 4. Cada persona es dueña de carpetas distintas y trabaja con los prefijos de rama de [`CONTRIBUTING.md`](../CONTRIBUTING.md). Cualquiera puede abrir un PR en una carpeta ajena, pero la persona dueña lo revisa.
 
-| Integrante | Rol | Es dueño de | Prefijos de rama |
+| Integrante | Área | Es dueño de | Prefijos de rama |
 |---|---|---|---|
-| **Cesar** | AI/ML y orquestación | `ports/`, `adapters/`, `agent/`, `mcp_simulado/` | `adapter/…`, `agent/…` |
-| **Juan Carlos** | Backend y despliegue | `domain/modelos.py`, `motor.py`, `juez.py`, `estados.py`, `autonomia.py`, `db/`, `api/`, `Dockerfile`, `deploy/`, `.github/workflows/` | `domain/…`, `api/…` |
-| **Vanessa** | Validaciones y datos | `domain/fx.py`, `domain/perfilador.py`, `tests/`, `data/` | `domain/…` |
-| **Brigitte** | Frontend | `frontend/` | `front/…` |
-| **Julia** | Producto, documentación y pitch | `README.md`, `docs/`, deck, video y HackRadar | `docs/…` |
+| **Brigitte** | Producto, negocio, pitch y agentes | `README.md`, `docs/investigacion/`, `AGENTS.md`, `CLAUDE.md`, el guion de la demo, la coordinación entre agentes, el deck, el video y HackRadar | `docs/…` |
+| **Cesar** | AI/ML, orquestación, FastAPI y React | `backend/app/agent/`, `backend/app/api/`, `backend/mcp_simulado/`, la integración con `frontend/` y el despliegue (`Dockerfile`, `deploy/`, `.github/workflows/`) | `agent/…`, `api/…`, `adapter/…` (MCP) |
+| **Juan Carlos** | Software, IA aplicada, datos y ciberseguridad | `backend/tests/` (T01–T12), `data/`, `backend/app/db/`, la revisión de seguridad y de prompt injection | `domain/…` (tests y datos), `api/…` (persistencia) |
+| **Julia** | AI Product Builder y UX | `frontend/src/screens/`, `frontend/src/components/` y los textos que ve la persona | `front/…` |
+| **Vanessa** | Backend, fullstack y reglas de negocio | `backend/app/domain/`, `backend/app/ports/`, `backend/app/adapters/` | `domain/…`, `adapter/…` |
 
-> **Ajustes respecto al Notion:** Juan Carlos toma el backend y Vanessa las validaciones y los datos; Brigitte construye el frontend (antes lo tenía Cesar) y Julia toma la documentación, el pitch y la entrega. Cesar se concentra en el MCP y el agente, que son el camino crítico, y conecta el cliente de la API a las pantallas.
+> **Cambio del 27-nov:** el equipo confirmó el reparto de `AGENTS.md`. Para equilibrar la carga, Juan Carlos escribe `domain/fx-banda` y `domain/perfilador` (sus tests son T09, T11, T01, T02 y T12) y Cesar escribe `adapter/live-belo` (ya tiene el login OAuth). Vanessa revisa esas tres ramas porque son de sus carpetas.
 
 ### Ramas de cada persona
 
-Una rama por tarea, creada desde `main` actualizado justo antes de empezarla, con un PR corto y una revisión. La columna "Revisa" indica quién aprueba el PR.
+Una rama por tarea, creada desde `main` actualizado justo antes de empezarla, con un PR corto y una revisión. Nadie hace commit directo en `main`. La columna "Revisa" indica quién aprueba el PR.
 
-#### Cesar · AI/ML y orquestación
+#### Brigitte · Producto, negocio, pitch y agentes
+
+| Rama | Qué entrega | Bloque | Revisa |
+|---|---|---|---|
+| `docs/respuestas-mentores` | Respuestas de Belo a las preguntas abiertas de `decisiones.md` (la 1 y de la 6 a la 11), anotadas en el mismo archivo | 0 | Cesar |
+| `docs/investigacion-negocio` | `docs/investigacion/negocio.md` y `pitch.md`, con fuentes | 1–2 | Julia |
+| `docs/guion-demo` | Texto de cada pantalla de la demo, cronometrado a 50 segundos | 3 | Julia |
+| `docs/readme-entrega` | README final: enlace público, cómo probarlo, capturas, cifra real de tests y qué es SIMULATED | 5 | Cesar |
+
+Fuera del repo: deck, video de respaldo, publicaciones de Construye en Público y el formulario de HackRadar.
+
+#### Cesar · AI/ML, orquestación, FastAPI y React
 
 | Rama | Qué entrega | Bloque | Tests | Revisa |
 |---|---|---|---|---|
-| `adapter/belo-port` | Contrato `BeloPort` (las 7 tools de la V1 más `move_to_pocket`) | 1 | — | Juan Carlos |
-| `adapter/mock-belo` | `MockBeloAdapter` con los datos de Sofía, cotización configurable y modos de fallo (timeout, FX fuera de banda) | 1 | Base de T05 y T09 | Vanessa |
-| `adapter/mcp-simulado` | Servidor MCP propio con las 8 tools de la V1 (mismos nombres, respuestas del mock) y una primera versión de `LiveBeloMCPAdapter` que se conecta a él | 1 | Prueba de humo: cada tool responde por MCP | Juan Carlos |
+| `api/contrato-ejemplos` | Endpoints con respuestas de ejemplo, para que el frontend arranque (C3) | 1 | — | Julia |
+| `api/deploy-digitalocean` | `Dockerfile` de varias etapas (compila el frontend y lo sirve FastAPI), `deploy/docker-compose.yml`, `deploy/Caddyfile` y `.github/workflows/deploy.yml`; la URL pública funcionando | 1 | `/api/salud` responde en la URL | Juan Carlos |
+| `adapter/mcp-simulado` | Servidor MCP propio (FastMCP) que imita las tools `belo_*` que usamos ([`belo-mcp/tools.md`](belo-mcp/tools.md)) con las respuestas del mock, incluido `awaiting_approval` | 1 | Prueba de humo: cada tool responde por MCP | Vanessa |
 | `agent/llm-cliente` | `agent/llm.py`: cliente de Claude, structured outputs, respaldo ante rechazos y textos de plantilla | 2 | — | Juan Carlos |
-| `agent/orquestador-plan` | `load_context → fetch_belo → rules_engine → compose_plan` | 2 | T08 | Juan Carlos |
-| `agent/aprobacion-ejecucion` | `human_approval → execute_and_audit`: OK del plan, link de aprobación de Belo por movimiento, espera de la confirmación y MCP Log | 3 | T03, T06 (de punta a punta) | Juan Carlos |
-| `adapter/live-belo` | `LiveBeloMCPAdapter` contra `https://b2b.belo.app/mcp`: OAuth (reutiliza el login de `listar_tools_belo.py`), lecturas y un movimiento de monto chico que devuelve el link de aprobación de Belo | 3, si Belo habilita nuestro cliente | Prueba manual desde el portátil | Vanessa |
-| `front/cliente-api` | Tipos generados del OpenAPI y conexión de las pantallas a la API real | 3 | — | Brigitte |
-| `agent/perfilado` | `profile_patterns`: el LLM nombra los patrones y redacta las reglas propuestas | 4 | T12 (con Vanessa) | Vanessa |
+| `agent/orquestador-plan` | `load_context → fetch_belo → rules_engine → compose_plan` | 2 | T08 | Vanessa |
+| `agent/aprobacion-ejecucion` | `human_approval → execute_and_audit`: OK del plan, cotizar y confirmar en Belo, esperar `success` o `failed` con `belo_get_transaction`, y MCP Log | 3 | T03, T06 (de punta a punta) | Juan Carlos |
+| `api/endpoints-reales` | Reglas, planes, aprobar, log, avanzar reloj y `POST /api/demo/reiniciar` | 3 | — | Juan Carlos |
+| `front/cliente-api` | Tipos generados del OpenAPI y conexión de las pantallas a la API real | 3 | — | Julia |
+| `adapter/live-belo` | `LiveBeloMCPAdapter` contra `https://b2b.belo.app/mcp`: OAuth (reutiliza el login de `listar_tools_belo.py`), lecturas y un movimiento de monto chico | 3, si Belo habilita nuestro cliente | Prueba manual desde el portátil | Vanessa |
+| `agent/perfilado` | `profile_patterns`: el LLM nombra los patrones y redacta las reglas propuestas | 4 | T12 (con Juan Carlos) | Juan Carlos |
 
-#### Juan Carlos · Backend y despliegue
+#### Juan Carlos · Software, IA aplicada, datos y ciberseguridad
 
 | Rama | Qué entrega | Bloque | Tests | Revisa |
 |---|---|---|---|---|
 | `api/esqueleto` | Proyecto con uv, FastAPI, ruff y pytest; `GET /api/salud` | 0 | — | Cesar |
-| `api/deploy-digitalocean` | `Dockerfile` de varias etapas (compila el frontend y lo sirve FastAPI), `deploy/docker-compose.yml`, `deploy/Caddyfile` y `.github/workflows/deploy.yml`; la URL pública funcionando | 1 | `/api/salud` responde en la URL | Cesar |
-| `domain/modelos` | `Regla`, `Vencimiento`, `Plan`, `Movimiento`, `EstadoMovimiento`, `DecisionJuez` | 1 | — | Cesar |
-| `api/contrato-ejemplos` | Endpoints con respuestas de ejemplo, para que el frontend arranque | 1 | — | Brigitte |
-| `domain/motor-juez` | Motor (1.500 → 900 / 120 / 380 / 100) y juez (colchón, tope, Caso Rojo) | 2 | T03, T04, T07 | Vanessa |
-| `domain/estados-idempotencia` | Máquina de estados y clave `plan_id` + paso | 2 | T06 | Vanessa |
-| `api/endpoints-reales` | Reglas, planes, aprobar, log, avanzar reloj y `POST /api/demo/reiniciar` | 3 | — | Cesar |
-| `domain/autonomia` | Niveles por categoría, ascenso con evidencia y descenso con un reverso | 3 | T10 | Vanessa |
+| `domain/datos-kit` | Ajustar `sofia-demo.json` e `historial-sofia.json` a los campos reales de Belo (montos como texto decimal) | 0 | — | Vanessa |
+| `domain/tests-seguridad` | T01–T12 escritos como tests que fallan (`xfail`) sobre C1 y C2 | 1 | T01–T12 | Vanessa |
+| `domain/fx-banda` | `fx.py`: retener si empeora más de 2%, proponer adelantar si mejora 2% o más | 2 | T09, T11 | Vanessa |
+| `api/persistencia` | `db/`: SQLite con SQLModel para reglas, planes, movimientos y MCP Log | 2 | — | Cesar |
+| `domain/perfilador` | Recurrencias en el historial (≥3 repeticiones, ±3 días, CV ≤5%): deben salir 4 patrones | 3 | T01, T02, T12 | Vanessa |
+| `domain/revision-seguridad` | Revisión de prompt injection y de que el LLM no reciba tools de escritura; hallazgos en `mensajes/` | 4 | — | Cesar |
 | `api/arranque-demo` | Siembra de datos al arrancar y script de un comando para correr en local | 4 | — | Cesar |
+| `domain/pruebas-url-publica` | Lista de comprobación y 5 corridas seguidas de la demo en la URL pública | 4 | — | Brigitte |
 
-#### Vanessa · Validaciones y datos
-
-| Rama | Qué entrega | Bloque | Tests | Revisa |
-|---|---|---|---|---|
-| `domain/datos-kit` | Ajustar `sofia-demo.json` e `historial-sofia.json` a los campos reales del kit | 0 | — | Cesar |
-| `domain/tests-seguridad` | T01–T12 escritos como tests que fallan (`xfail`) sobre C1 y C2 | 1 | T01–T12 | Juan Carlos |
-| `domain/fx-banda` | `fx.py`: retener si empeora más de 2%, proponer adelantar si mejora 2% o más | 2 | T09, T11 | Juan Carlos |
-| `domain/reconciliacion` | Reconciliar un timeout con `account.activity` (máximo 2 reintentos) | 2 | T05 | Cesar |
-| `domain/perfilador` | Recurrencias en el historial (≥3 repeticiones, ±3 días, CV ≤5%): deben salir 4 patrones | 3 | T01, T02, T12 | Cesar |
-| `domain/pruebas-url-publica` | Lista de comprobación y 5 corridas seguidas de la demo en la URL pública | 4 | — | Juan Carlos |
-
-#### Brigitte · Frontend
+#### Julia · AI Product Builder y UX
 
 | Rama | Qué entrega | Bloque | Revisa |
 |---|---|---|---|
 | `front/esqueleto` | Vite, React, TypeScript y Tailwind; navegación de las 4 pantallas | 0 | Cesar |
-| `front/pantalla-reglas` | Pantalla 1: reglas de Sofía editables | 1 | Julia |
-| `front/pantalla-plan` | Pantalla 2: tarjeta del plan con sus 3 movimientos y la explicación | 1 | Julia |
-| `front/pantalla-aprobacion` | Pantalla 3: Caso Rojo bloqueado y aprobación con los 4 estados | 2 | Cesar |
+| `front/pantalla-reglas` | Pantalla 1: reglas de Sofía editables | 1 | Brigitte |
+| `front/pantalla-plan` | Pantalla 2: tarjeta del plan con sus 3 movimientos y la explicación | 1 | Brigitte |
+| `front/pantalla-aprobacion` | Pantalla 3: Caso Rojo bloqueado, OK del plan y espera de la aprobación en Belo con los 4 estados | 2 | Cesar |
 | `front/pantalla-resumen-log` | Pantalla 4: resumen, MCP Log y badge SIMULATED | 3 | Cesar |
 | `front/reiniciar-demo` | Botón visible de **Reiniciar demo** y aviso de datos sintéticos | 3 | Juan Carlos |
 | `front/perfilado` | Reglas propuestas que Sofía confirma o descarta | 4 | Cesar |
-| `front/pulido` | Textos, estados de carga, vista en celular y accesibilidad básica | 4 | Julia |
+| `front/pulido` | Textos, estados de carga, vista en celular y accesibilidad básica | 4 | Brigitte |
 
-#### Julia · Producto, documentación y pitch
+#### Vanessa · Backend, fullstack y reglas de negocio
 
-| Rama | Qué entrega | Bloque | Revisa |
-|---|---|---|---|
-| `docs/respuestas-mentores` | Respuestas de Belo a las preguntas de `decisiones.md` (ahora 11), anotadas en el mismo archivo | 0 | Cesar |
-| `docs/guion-demo` | Texto de cada pantalla de la demo, cronometrado a 50 segundos | 3 | Brigitte |
-| `docs/readme-entrega` | README final: enlace público, cómo probarlo, capturas, cifra real de tests y qué es SIMULATED | 5 | Cesar |
-
-Fuera del repo: deck, video de respaldo, publicaciones de Construye en Público y el formulario de HackRadar.
+| Rama | Qué entrega | Bloque | Tests | Revisa |
+|---|---|---|---|---|
+| `domain/modelos` | `Regla`, `Vencimiento`, `Plan`, `Movimiento`, `EstadoMovimiento`, `DecisionJuez` (C1) | 1 | — | Cesar |
+| `adapter/belo-port` | Contrato `BeloPort` con las tools reales de [`belo-mcp/tools.md`](belo-mcp/tools.md) más `move_to_pocket` (C2) | 1 | — | Cesar |
+| `adapter/mock-belo` | `MockBeloAdapter` con los datos de Sofía, cotización configurable y modos de fallo (timeout, FX fuera de banda, aprobación rechazada) (C2) | 1 | Base de T05 y T09 | Juan Carlos |
+| `domain/motor-juez` | Motor (1.500 → 900 / 120 / 380 / 100) y juez (colchón, tope, Caso Rojo) | 2 | T03, T04, T07 | Juan Carlos |
+| `domain/estados-idempotencia` | Máquina de estados y clave `plan_id` + paso | 2 | T06 | Juan Carlos |
+| `domain/reconciliacion` | Reconciliar un timeout con `belo_get_transaction` y `belo_list_transactions` (máximo 2 reintentos) | 3 | T05 | Juan Carlos |
+| `domain/autonomia` | Niveles por categoría, ascenso con evidencia y descenso con un reverso | 3 | T10 | Cesar |
 
 ---
 
@@ -212,9 +215,9 @@ Para trabajar en paralelo desde el viernes, tres contratos se acuerdan antes que
 
 | # | Contrato | Dueño | Rama | Hora límite |
 |---|---|---|---|---|
-| C1 | Modelos del dominio | Juan Carlos con Cesar | `domain/modelos` | Viernes 20:00 |
-| C2 | `BeloPort` y `MockBeloAdapter` con `data/sofia-demo.json` | Cesar | `adapter/belo-port`, `adapter/mock-belo` | Viernes 21:00 |
-| C3 | Endpoints con respuestas de ejemplo (sin lógica todavía) | Juan Carlos | `api/contrato-ejemplos` | Viernes 22:00 |
+| C1 | Modelos del dominio | Vanessa con Cesar | `domain/modelos` | Viernes 20:00 |
+| C2 | `BeloPort` y `MockBeloAdapter` con `data/sofia-demo.json` | Vanessa | `adapter/belo-port`, `adapter/mock-belo` | Viernes 21:00 |
+| C3 | Endpoints con respuestas de ejemplo (sin lógica todavía) | Cesar | `api/contrato-ejemplos` | Viernes 22:00 |
 
 El anexo A1 de [`caso-de-prueba.md`](caso-de-prueba.md) ya trae un borrador de C2, y la tabla de [`backend/app/api/README.md`](../backend/app/api/README.md) uno de C3 (todas las rutas van bajo `/api`).
 
@@ -227,53 +230,53 @@ Horas en hora de Colombia. Cada bloque cierra con un **checkpoint** de 10 minuto
 ### Bloque 0 · Viernes 17:00–18:30 · Kickoff y arranque
 
 - **Todos:** escuchar el kickoff, leer el kit del MCP y las bases de entrega, y votar las 4 decisiones de la sección 1.
-- **Julia:** hacer las 11 preguntas a los mentores de [`decisiones.md`](decisiones.md). Las primeras son urgentes: el 403 de Cloudflare a nuestro cliente, los nombres de las tools, el rendimiento y las alcancías.
-- **Cesar:** conectar el MCP de Belo con Claude Code, guardar la lista de tools en `docs/belo-mcp/` y probar una consulta de saldos. Si no quedó listo antes del kickoff, preparar el droplet (ver "Preparar el droplet").
-- **Juan Carlos:** `api/esqueleto`. **Brigitte:** `front/esqueleto`. **Vanessa:** `domain/datos-kit`.
+- **Brigitte:** hacer a los mentores las preguntas abiertas de [`decisiones.md`](decisiones.md). La urgente es la 1: el 403 de Cloudflare a nuestro cliente.
+- **Cesar:** preparar el droplet (ver "Preparar el droplet"). La lista de tools de Belo ya está en [`belo-mcp/tools.md`](belo-mcp/tools.md).
+- **Juan Carlos:** `api/esqueleto` y `domain/datos-kit`. **Julia:** `front/esqueleto`. **Vanessa:** empezar `domain/modelos`.
 
 ### Bloque 1 · Viernes 18:30–23:30 · Contratos, esqueleto y URL pública
 
-- **Juan Carlos:** `domain/modelos` y `api/contrato-ejemplos` (C1 y C3), y `api/deploy-digitalocean`: la URL pública muestra el frontend y responde `/api/salud`.
-- **Cesar:** `adapter/belo-port` y `adapter/mock-belo` (C2), y después `adapter/mcp-simulado`.
-- **Vanessa:** `domain/tests-seguridad`.
-- **Brigitte:** `front/pantalla-reglas` y `front/pantalla-plan` con los JSON de ejemplo.
-- **Julia:** primera publicación de Construye en Público.
+- **Vanessa:** `domain/modelos` (C1), y `adapter/belo-port` y `adapter/mock-belo` (C2).
+- **Cesar:** `api/contrato-ejemplos` (C3) y `api/deploy-digitalocean`: la URL pública muestra el frontend y responde `/api/salud`. Después, `adapter/mcp-simulado`.
+- **Juan Carlos:** `domain/tests-seguridad`.
+- **Julia:** `front/pantalla-reglas` y `front/pantalla-plan` con los JSON de ejemplo.
+- **Brigitte:** primera publicación de Construye en Público y `docs/investigacion-negocio`.
 
 **Checkpoint 23:30:** **la URL pública existe** y muestra las pantallas 1 y 2 con datos de ejemplo; el mock responde y los 12 tests existen (fallando).
 
 ### Bloque 2 · Sábado 08:00–13:00 · El núcleo que frena
 
-- **Juan Carlos:** `domain/motor-juez` y `domain/estados-idempotencia`.
-- **Vanessa:** `domain/fx-banda` y `domain/reconciliacion`.
+- **Vanessa:** `domain/motor-juez` y `domain/estados-idempotencia`.
+- **Juan Carlos:** `domain/fx-banda` y `api/persistencia`.
 - **Cesar:** `agent/llm-cliente` y `agent/orquestador-plan`.
-- **Brigitte:** `front/pantalla-aprobacion`.
-- **Julia:** borrador del deck con capturas de la URL pública.
+- **Julia:** `front/pantalla-aprobacion`.
+- **Brigitte:** borrador del deck con capturas de la URL pública.
 
 **Checkpoint 13:00:** en la URL pública, simular un ingreso devuelve el plan correcto y el Caso Rojo se bloquea. Al menos 8 de 12 tests pasan.
 
 ### Bloque 3 · Sábado 14:00–19:00 · De punta a punta
 
-- **Cesar:** `agent/aprobacion-ejecucion`, `front/cliente-api` y `adapter/live-belo`.
-- **Juan Carlos:** `api/endpoints-reales` y `domain/autonomia`.
-- **Vanessa:** `domain/perfilador`.
-- **Brigitte:** `front/pantalla-resumen-log` y `front/reiniciar-demo`.
-- **Julia:** `docs/guion-demo`.
+- **Cesar:** `agent/aprobacion-ejecucion`, `api/endpoints-reales`, `front/cliente-api` y `adapter/live-belo`.
+- **Vanessa:** `domain/reconciliacion` y `domain/autonomia`.
+- **Juan Carlos:** `domain/perfilador`.
+- **Julia:** `front/pantalla-resumen-log` y `front/reiniciar-demo`.
+- **Brigitte:** `docs/guion-demo`.
 
 **Checkpoint 19:00:** **la demo completa corre de punta a punta en la URL pública**, incluido Reiniciar demo. 12 de 12 tests pasan o se sabe exactamente cuáles no.
 
 ### Bloque 4 · Sábado 19:00–23:00 · Congelar y ensayar
 
 - **22:00: congelamiento de funciones.** Desde aquí solo se corrigen errores.
-- **Cesar + Brigitte:** `agent/perfilado` y `front/perfilado`, solo si los bloques anteriores están en verde. Brigitte también `front/pulido`.
-- **Vanessa:** `domain/pruebas-url-publica`: 5 corridas seguidas en la URL, desde otro computador y desde un celular.
-- **Juan Carlos:** `api/arranque-demo`.
-- **Julia + quien presenta:** ensayar el pitch con la URL pública y **grabar el video de respaldo**.
+- **Cesar + Julia:** `agent/perfilado` y `front/perfilado`, solo si los bloques anteriores están en verde. Julia también `front/pulido`.
+- **Juan Carlos:** `domain/revision-seguridad`, `api/arranque-demo` y `domain/pruebas-url-publica`: 5 corridas seguidas en la URL, desde otro computador y desde un celular.
+- **Vanessa:** corregir lo que salga de las pruebas en el dominio y los adaptadores.
+- **Brigitte + quien presenta:** ensayar el pitch con la URL pública y **grabar el video de respaldo**.
 
 ### Bloque 5 · Domingo 08:00–12:00 · Entrega
 
 | Hora | Qué |
 |---|---|
-| 08:00–09:30 | Correcciones finales. Julia: `docs/readme-entrega` |
+| 08:00–09:30 | Correcciones finales. Brigitte: `docs/readme-entrega` |
 | 09:30–10:30 | Tres ensayos del pitch con cronómetro |
 | 10:30 | Hacer público el repositorio, revisar que no haya secretos y **probar la URL en una ventana de incógnito** |
 | **11:00** | **Entregar en HackRadar** con el enlace del repo y el de la app (una hora de margen) |
