@@ -1,0 +1,10 @@
+# /etc/cloudflared/cfo.yml en el droplet. <UUID> es el del túnel cfo-agentico.
+# La credencial /etc/cloudflared/<UUID>.json vive solo en el servidor (permisos 400), nunca aquí.
+tunnel: <UUID>
+credentials-file: /etc/cloudflared/<UUID>.json
+originRequest:
+  connectTimeout: 30s
+ingress:
+  - hostname: cfo.pruebassite.com
+    service: http://127.0.0.1:8095
+  - service: http_status:404

@@ -1,0 +1,11 @@
+[Unit]
+Description=CFO Agentico: trae la imagen nueva de ghcr.io y reinicia solo si cambio
+After=docker.service network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=sig
+WorkingDirectory=/home/sig/srv/cfo-agentico
+ExecStart=/usr/bin/docker compose pull -q
+ExecStart=/usr/bin/docker compose up -d --remove-orphans
