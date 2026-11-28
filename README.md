@@ -168,8 +168,8 @@ Doce pruebas escritas antes de la interfaz. Entre otras: un patrón detectado no
 
 | Integrante | Rol |
 |---|---|
-| Julia Arizbeth Gómez Gámez | Producto, documentación y pitch |
-| Cesar David Revelo Apraez | AI/ML y orquestación |
-| Vanessa Yareli Hernández Cázares | Validaciones y datos |
-| Juan Carlos Pastas Valencia | Backend y despliegue |
-| Brigitte Aponte | Frontend |
+| Brigitte Aponte | Producto, negocio, pitch y agentes |
+| Cesar David Revelo Apraez | AI/ML, orquestación, FastAPI y React |
+| Juan Carlos Pastas Valencia | Software, IA aplicada, datos y ciberseguridad |
+| Julia Arizbeth Gómez Gámez | AI Product Builder y UX |
+| Vanessa Yareli Hernández Cázares | Backend, fullstack y reglas de negocio |
