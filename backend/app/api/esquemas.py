@@ -1,6 +1,7 @@
 """Contrato C3: la forma de cada respuesta de la API.
 
-Los montos viajan como texto decimal ("900.00") para no perder precisión; en el backend son `Decimal`.
+Los montos viajan como texto decimal ("900.00") para no perder precisión;
+en el backend son `Decimal`.
 Estos esquemas son de la API: el dominio (C1) los llena, pero no depende de ellos.
 """
 
@@ -49,7 +50,9 @@ class AprobacionBelo(BaseModel):
 
 class Movimiento(BaseModel):
     paso: str = Field(examples=["M1"])
-    clave: str = Field(examples=["plan-ing01-M1"], description="Clave de idempotencia: plan_id + paso")
+    clave: str = Field(
+        examples=["plan-ing01-M1"], description="Clave de idempotencia: plan_id + paso"
+    )
     categoria: str = Field(examples=["rendimiento_usdt"])
     titulo: str
     porque: str
@@ -78,7 +81,9 @@ class Plan(BaseModel):
     titulo: str
     movimientos: list[Movimiento]
     resumen: ResumenPlan
-    mensaje: str | None = Field(None, description="Texto para la persona: Caso Rojo, RETENIDO o resumen final")
+    mensaje: str | None = Field(
+        None, description="Texto para la persona: Caso Rojo, RETENIDO o resumen final"
+    )
 
 
 class Vencimiento(BaseModel):

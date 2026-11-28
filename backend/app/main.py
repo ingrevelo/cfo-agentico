@@ -8,6 +8,8 @@ from pathlib import Path
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from app.api import rutas_ejemplo
+
 
 def get_database_url() -> str:
     """Devuelve la URL de SQLite (por defecto en /tmp para contenedor de solo lectura)."""
@@ -26,6 +28,10 @@ def create_app() -> FastAPI:
     @application.get("/api/salud")
     def salud() -> dict[str, str]:
         return {"estado": "ok", "servicio": "cfo-agentico"}
+
+    # Contrato C3 con respuestas de ejemplo; api/endpoints-reales lo reemplaza sin cambiar rutas.
+    # Va antes de montar el frontend en "/", para que /api no quede tapado por los estáticos.
+    application.include_router(rutas_ejemplo.router)
 
     frontend_dist = Path(os.getenv("FRONTEND_DIST", "/app/static"))
     if frontend_dist.is_dir():

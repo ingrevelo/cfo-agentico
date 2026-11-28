@@ -13,7 +13,16 @@ from mcp.server.mcpserver.exceptions import ToolError
 from mcp.types import ToolAnnotations
 from pydantic import Field
 
-from .estado import APROBACIONES, FALLOS, REDES, RENDIMIENTO_ANUAL, ErrorSimulado, Estado, dec, texto
+from .estado import (
+    APROBACIONES,
+    FALLOS,
+    REDES,
+    RENDIMIENTO_ANUAL,
+    ErrorSimulado,
+    Estado,
+    dec,
+    texto,
+)
 
 estado = Estado()
 mcp = MCPServer(
@@ -53,7 +62,10 @@ def herramienta(annotations: ToolAnnotations | None = None):
 # ---------------------------------------------------------------------- solo lectura
 @herramienta(LECTURA)
 def belo_get_balances() -> dict:
-    """Saldo disponible por moneda, con el rendimiento anual (yield.rate). Montos como texto decimal."""
+    """Saldo disponible por moneda, con el rendimiento anual (yield.rate).
+
+    Montos como texto decimal.
+    """
     saldos = []
     for moneda, monto in estado.saldos.items():
         tasa = RENDIMIENTO_ANUAL.get(moneda)
@@ -88,7 +100,10 @@ def _listar(
 
 
 def belo_list_transactions(**argumentos) -> dict:
-    """Historial de movimientos, del más reciente al más antiguo. No incluye cotizaciones sin confirmar."""
+    """Historial de movimientos, del más reciente al más antiguo.
+
+    No incluye cotizaciones sin confirmar.
+    """
     # El parámetro se llama `from`, palabra reservada en Python: el SDK lo entrega por su alias.
     if "from" in argumentos:
         argumentos["from_"] = argumentos.pop("from")
@@ -117,8 +132,14 @@ def belo_get_transfer_networks(currency: str) -> dict:
 @herramienta(LECTURA)
 def belo_list_vaults(currencyCode: str | None = None) -> dict:  # noqa: N803
     """Bóvedas de ahorro. Desde este servidor no se puede meter ni sacar dinero de una bóveda."""
-    boveda = {"id": "1", "name": "Impuestos", "currencyCode": "USD",
-              "balance": texto(estado.boveda_impuestos), "goal": None, "yields": False}
+    boveda = {
+        "id": "1",
+        "name": "Impuestos",
+        "currencyCode": "USD",
+        "balance": texto(estado.boveda_impuestos),
+        "goal": None,
+        "yields": False,
+    }
     bovedas = [boveda] if currencyCode in (None, "USD") else []
     return _sim({"vaults": bovedas})
 
@@ -129,17 +150,29 @@ def belo_get_vault(vaultId: str) -> dict:  # noqa: N803
     if vaultId != "1":
         raise ErrorSimulado(f"No existe la bóveda {vaultId}")
     cero = "0.00"
-    return _sim({"id": "1", "name": "Impuestos", "currencyCode": "USD",
-                 "balance": texto(estado.boveda_impuestos),
-                 "earned": dict.fromkeys(("total", "today", "yesterday", "week", "month", "year"), cero)})
+    return _sim(
+        {
+            "id": "1",
+            "name": "Impuestos",
+            "currencyCode": "USD",
+            "balance": texto(estado.boveda_impuestos),
+            "earned": dict.fromkeys(("total", "today", "yesterday", "week", "month", "year"), cero),
+        }
+    )
 
 
 # ---------------------------------------------------------------------- cotizar
 @herramienta(COTIZA)
 def belo_preview_swap(
-    pairCode: str, quoteAmount: str, quoteCurrency: str, type: Literal["BUY", "SELL"]  # noqa: N803
+    pairCode: str,
+    quoteAmount: str,
+    quoteCurrency: str,
+    type: Literal["BUY", "SELL"],  # noqa: N803
 ) -> dict:
-    """Cotiza una conversión. Devuelve id, precio, montos y vencimiento (15 minutos). No debita nada."""
+    """Cotiza una conversión. Devuelve id, precio, montos y vencimiento (15 minutos).
+
+    No debita nada.
+    """
     return _sim(estado.cotizar_swap(pairCode, quoteAmount, quoteCurrency, type).vista())
 
 
@@ -190,8 +223,15 @@ def simulado_configurar(
         estado.aprobacion = aprobacion
     if fallo is not None:
         estado.fallo = fallo
-    return _sim({"fx_usd_ars": str(estado.fx_usd_ars), "aprobacion": estado.aprobacion,
-                 "fallo": estado.fallo, "aprobaciones": list(APROBACIONES), "fallos": list(FALLOS)})
+    return _sim(
+        {
+            "fx_usd_ars": str(estado.fx_usd_ars),
+            "aprobacion": estado.aprobacion,
+            "fallo": estado.fallo,
+            "aprobaciones": list(APROBACIONES),
+            "fallos": list(FALLOS),
+        }
+    )
 
 
 @herramienta()

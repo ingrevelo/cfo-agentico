@@ -1,6 +1,6 @@
 """Arranca el MCP simulado por HTTP: http://127.0.0.1:8001/mcp
 
-    cd backend && uv run --with "mcp>=2.3" python -m mcp_simulado
+cd backend && uv run --with "mcp>=2.3" python -m mcp_simulado
 """
 
 import os
