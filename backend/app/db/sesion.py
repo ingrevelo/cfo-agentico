@@ -6,6 +6,7 @@ import os
 from collections.abc import Generator
 from pathlib import Path
 
+from sqlalchemy import event
 from sqlalchemy.engine import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
@@ -23,8 +24,21 @@ def crear_engine(database_url: str | None = None) -> Engine:
     if url.startswith("sqlite:///") and not url.startswith("sqlite:///:memory:"):
         ruta_archivo = Path(url.removeprefix("sqlite:///"))
         ruta_archivo.parent.mkdir(parents=True, exist_ok=True)
-    connect_args = {"check_same_thread": False} if url.startswith("sqlite") else {}
-    return create_engine(url, connect_args=connect_args)
+    connect_args = (
+        {"check_same_thread": False, "timeout": 15.0} if url.startswith("sqlite") else {}
+    )
+    engine = create_engine(url, connect_args=connect_args)
+    if url.startswith("sqlite") and not url.startswith("sqlite:///:memory:"):
+
+        @event.listens_for(engine, "connect")
+        def _configurar_sqlite(dbapi_conn, _connection_record) -> None:
+            cursor = dbapi_conn.cursor()
+            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.execute("PRAGMA busy_timeout=15000")
+            cursor.execute("PRAGMA synchronous=NORMAL")
+            cursor.close()
+
+    return engine
 
 
 def init_db(engine: Engine) -> None:

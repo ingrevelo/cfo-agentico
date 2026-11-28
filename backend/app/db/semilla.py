@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import threading
 from decimal import Decimal
 from pathlib import Path
 
@@ -19,21 +20,17 @@ from app.db.modelos import (
 )
 
 DEFAULT_DATA_DIR = Path(__file__).resolve().parents[3] / "data"
+_LOCK_REINICIO = threading.Lock()
 
 
 def _dec_str(valor: object) -> str:
     return format(Decimal(str(valor)).quantize(Decimal("0.01")), "f")
 
 
-def sembrar_sofia(session: Session, data_dir: Path | None = None) -> PerfilDB:
-    """Siembra perfil, reglas, vencimientos y niveles de Sofía de forma idempotente."""
+def _cargar_y_agregar_sofia(session: Session, data_dir: Path | None = None) -> PerfilDB:
     ruta = (data_dir or DEFAULT_DATA_DIR) / "sofia-demo.json"
     datos = json.loads(ruta.read_text(encoding="utf-8"))
     user_id: str = datos["user_id"]
-
-    perfil = session.get(PerfilDB, user_id)
-    if perfil is not None:
-        return perfil
 
     prof = datos["profile"]
     perfil = PerfilDB(
@@ -85,6 +82,20 @@ def sembrar_sofia(session: Session, data_dir: Path | None = None) -> PerfilDB:
             )
         )
 
+    return perfil
+
+
+def sembrar_sofia(session: Session, data_dir: Path | None = None) -> PerfilDB:
+    """Siembra perfil, reglas, vencimientos y niveles de Sofía de forma idempotente."""
+    ruta = (data_dir or DEFAULT_DATA_DIR) / "sofia-demo.json"
+    datos = json.loads(ruta.read_text(encoding="utf-8"))
+    user_id: str = datos["user_id"]
+
+    perfil = session.get(PerfilDB, user_id)
+    if perfil is not None:
+        return perfil
+
+    perfil = _cargar_y_agregar_sofia(session, data_dir=data_dir)
     session.commit()
     session.refresh(perfil)
     return perfil
@@ -92,15 +103,19 @@ def sembrar_sofia(session: Session, data_dir: Path | None = None) -> PerfilDB:
 
 def reiniciar_demo(session: Session, data_dir: Path | None = None) -> PerfilDB:
     """Limpia todas las tablas y vuelve a sembrar el estado inicial de la demo."""
-    for tabla in (
-        McpLogDB,
-        MovimientoDB,
-        PlanDB,
-        NivelAutonomiaDB,
-        VencimientoDB,
-        ReglaDB,
-        PerfilDB,
-    ):
-        session.exec(delete(tabla))  # type: ignore[arg-type]
-    session.commit()
-    return sembrar_sofia(session, data_dir=data_dir)
+    with _LOCK_REINICIO:
+        for tabla in (
+            McpLogDB,
+            MovimientoDB,
+            PlanDB,
+            NivelAutonomiaDB,
+            VencimientoDB,
+            ReglaDB,
+            PerfilDB,
+        ):
+            session.exec(delete(tabla))  # type: ignore[arg-type]
+        session.flush()
+        perfil = _cargar_y_agregar_sofia(session, data_dir=data_dir)
+        session.commit()
+        session.refresh(perfil)
+        return perfil
