@@ -22,6 +22,7 @@ from .estado import (
     Estado,
     dec,
     texto,
+    validar_moneda,
 )
 
 estado = Estado()
@@ -124,6 +125,7 @@ def belo_get_transaction(transactionId: str) -> dict:  # noqa: N803 (nombre del 
 @herramienta(LECTURA)
 def belo_get_transfer_networks(currency: str) -> dict:
     """Redes por las que se puede enviar una moneda, con su mínimo, máximo y comisión."""
+    validar_moneda(currency)
     if currency not in REDES:
         raise ErrorSimulado(f"Moneda sin redes de envío: {currency}")
     return _sim({"currency": currency, "networks": REDES[currency]})
@@ -184,7 +186,7 @@ def belo_preview_transfer(
     quoteAmount: str,  # noqa: N803
     quoteCurrency: str | None = None,  # noqa: N803
 ) -> dict:
-    """Cotiza un envío: interno de Belo, a CVU/CBU/alias (solo ARS) o cripto. No debita nada."""
+    """Cotiza un envío: interno de Belo, a CVU/CBU/alias (solo ARGt) o cripto. No debita nada."""
     if quoteCurrency and quoteCurrency != currency:
         raise ErrorSimulado("En el simulado, quoteCurrency debe ser igual a currency")
     return _sim(estado.cotizar_transferencia(address, addressType, currency, quoteAmount).vista())
@@ -216,7 +218,7 @@ def simulado_configurar(
     aprobacion: Literal["auto", "manual", "rechazo"] | None = None,
     fallo: Literal["ninguno", "timeout"] | None = None,
 ) -> dict:
-    """Cambia la cotización USD/ARS, el modo de aprobación o el modo de fallo (para T05 y T09)."""
+    """Cambia la cotización USD/ARGt, el modo de aprobación o el modo de fallo (para T05 y T09)."""
     if fx_usd_ars is not None:
         estado.fx_usd_ars = dec(fx_usd_ars)
     if aprobacion is not None:

@@ -87,14 +87,14 @@ async def main() -> None:
             saldos["USD"] == "600.00" and saldos["USDT"] == "900.00", "USD 600.00 y USDT 900.00"
         )
 
-        print("\nAlquiler: transferencia ARS a alias con aprobación manual")
+        print("\nAlquiler: transferencia ARGt a alias con aprobación manual")
         await llamar(s, "simulado_configurar", aprobacion="manual")
         ok, q = await llamar(
             s,
             "belo_preview_swap",
-            pairCode="USD/ARS",
+            pairCode="USD/ARGt",
             quoteAmount="450000",
-            quoteCurrency="ARS",
+            quoteCurrency="ARGt",
             type="SELL",
         )
         await llamar(s, "belo_confirm_swap", transactionId=q["id"])
@@ -107,7 +107,7 @@ async def main() -> None:
             "belo_preview_transfer",
             address="sofia.alquiler.demo",
             addressType="ALIAS",
-            currency="ARS",
+            currency="ARGt",
             quoteAmount="450000",
         )
         await llamar(s, "belo_confirm_transfer", transactionId=q["id"])
@@ -123,7 +123,11 @@ async def main() -> None:
             currency="USD",
             quoteAmount="10",
         )
-        revisar(not ok and "pesos argentinos" in e, "banco solo para ARS")
+        revisar(not ok and "pesos argentinos" in e, "banco solo para ARGt")
+        ok, e = await llamar(s, "belo_get_transfer_networks", currency="ARS")
+        revisar(not ok and "ARGt" in e, "ARS se rechaza y sugiere ARGt")
+        ok, b = await llamar(s, "belo_get_balances")
+        revisar(ok and any(x["currency"] == "ARGt" for x in b["balances"]), "saldos con ARGt")
         await llamar(s, "simulado_configurar", aprobacion="auto", fallo="timeout")
         ok, q = await llamar(
             s,
@@ -140,7 +144,7 @@ async def main() -> None:
             ok and c["status"] == "success", "la reconciliación encuentra el movimiento hecho (T05)"
         )
         ok, cfg = await llamar(s, "simulado_configurar", fx_usd_ars="1150", fallo="ninguno")
-        revisar(ok and cfg["fx_usd_ars"] == "1150", "cotización USD/ARS cambiada a 1150 (T09)")
+        revisar(ok and cfg["fx_usd_ars"] == "1150", "cotización USD/ARGt cambiada a 1150 (T09)")
         await llamar(s, "simulado_reiniciar")
 
     print(f"\n{'Todo bien' if not fallas else f'{len(fallas)} fallas'}")
